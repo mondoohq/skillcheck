@@ -13,6 +13,7 @@ type ScanResult struct {
 // AgentResult holds results for a single AI agent.
 type AgentResult struct {
 	Platform   string            `json:"platform"`
+	ConfigPath string            `json:"configPath"`
 	Skills     []SkillResult     `json:"skills,omitempty"`
 	Plugins    []PluginResult    `json:"plugins,omitempty"`
 	MCPServers []MCPServerResult `json:"mcpServers,omitempty"`

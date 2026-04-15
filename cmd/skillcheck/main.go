@@ -110,7 +110,11 @@ func buildQuery(resource, configPath, field string) string {
 
 func runScan(jsonOutput, noColor, verbose bool) error {
 	if !jsonOutput {
-		fmt.Println(colorLogo())
+		if noColor {
+			fmt.Println(logo + "\n  mondoo™")
+		} else {
+			fmt.Println(colorLogo())
+		}
 		fmt.Println()
 	}
 
@@ -130,7 +134,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 
 	for _, ag := range agents {
 		configPath := filepath.Join(home, ag.ConfigDir)
-		agentResult := &reporter.AgentResult{Platform: ag.Platform}
+		agentResult := &reporter.AgentResult{Platform: ag.Platform, ConfigPath: configPath}
 
 		if ag.Skills != "" {
 			query := buildQuery(ag.Resource, configPath, ag.Skills)

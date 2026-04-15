@@ -46,6 +46,7 @@ func (r *CLIReporter) Report(result *ScanResult) error {
 
 func (r *CLIReporter) printAgent(agent *AgentResult) {
 	fmt.Fprintf(r.Writer, "%s %s\n", r.colorize("●", "cyan"), r.colorize(agent.Platform, "bold"))
+	fmt.Fprintf(r.Writer, "  %s\n", r.colorize(agent.ConfigPath, "dim"))
 
 	if len(agent.Skills) > 0 {
 		fmt.Fprintf(r.Writer, "  Skills (%d):\n", len(agent.Skills))
@@ -55,11 +56,11 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 				maxSev := maxSeverity(skill.Findings)
 				status = r.severityIcon(maxSev)
 			}
-			fmt.Fprintf(r.Writer, "    %s %s", status, skill.Name)
-			if r.Verbose && skill.Hash != "" {
-				fmt.Fprintf(r.Writer, " [%s]", skill.Hash[:12])
+			hashSuffix := ""
+			if skill.Hash != "" {
+				hashSuffix = " " + r.colorize(skill.Hash[:12], "dim")
 			}
-			fmt.Fprintln(r.Writer)
+			fmt.Fprintf(r.Writer, "    %s %s%s\n", status, skill.Name, hashSuffix)
 
 			for _, f := range skill.Findings {
 				fmt.Fprintf(r.Writer, "      %s %s",
@@ -109,11 +110,11 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 	if len(agent.Rules) > 0 {
 		fmt.Fprintf(r.Writer, "  Rules (%d):\n", len(agent.Rules))
 		for _, rule := range agent.Rules {
-			fmt.Fprintf(r.Writer, "    → %s", rule.Name)
-			if r.Verbose && rule.Hash != "" {
-				fmt.Fprintf(r.Writer, " [%s]", rule.Hash[:12])
+			hashSuffix := ""
+			if rule.Hash != "" {
+				hashSuffix = " " + r.colorize(rule.Hash[:12], "dim")
 			}
-			fmt.Fprintln(r.Writer)
+			fmt.Fprintf(r.Writer, "    → %s%s\n", rule.Name, hashSuffix)
 		}
 	}
 
