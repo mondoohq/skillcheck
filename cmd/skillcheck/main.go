@@ -109,6 +109,11 @@ func buildQuery(resource, configPath, field string) string {
 }
 
 func runScan(jsonOutput, noColor, verbose bool) error {
+	if !jsonOutput {
+		fmt.Println(colorLogo())
+		fmt.Println()
+	}
+
 	eng, err := engine.New()
 	if err != nil {
 		return fmt.Errorf("failed to initialize engine: %w", err)
