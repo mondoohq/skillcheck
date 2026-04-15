@@ -21,6 +21,11 @@ var (
 	date    = "unknown"
 )
 
+const logo = `    _   _ _ _    _           _
+ __| |_(_) | |__| |_  ___ __| |__
+(_-< / / | | / _| ' \/ -_) _| / /
+/__/_\_\_|_|_\__|_||_\___\__|_\_\`
+
 func main() {
 	var jsonOutput bool
 	var noColor bool
@@ -29,7 +34,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "skillcheck",
 		Short: "AI agent skill security scanner",
-		Long:  "Detects locally installed AI agent skills, computes SHA-256 checksums, and queries the Mondoo AI Agent Security database for known threats.",
+		Long:  colorLogo() + "\n\nDetects locally installed AI agent skills, computes SHA-256\nchecksums, and queries the Mondoo AI Agent Security database\nfor known threats.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Detect NO_COLOR environment variable
 			if _, ok := os.LookupEnv("NO_COLOR"); ok {
@@ -56,6 +61,13 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+func colorLogo() string {
+	if _, ok := os.LookupEnv("NO_COLOR"); ok {
+		return logo + "\n  mondoo™"
+	}
+	return "\033[36m" + logo + "\033[0m" + "\n  \033[2mmondoo™\033[0m"
 }
 
 // agentDef defines an AI agent and its MQL query templates.
