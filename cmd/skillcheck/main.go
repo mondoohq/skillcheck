@@ -70,16 +70,16 @@ func colorLogo() string {
 	return "\033[36m" + logo + "\033[0m" + "\n  \033[2mmondoo™\033[0m"
 }
 
-// agentDef defines an AI agent and its MQL query templates.
+// agentDef defines an AI agent and its MQL queries.
 // ConfigDir is relative to home directory.
 type agentDef struct {
 	Platform   string
 	Resource   string // MQL resource name (e.g., "claude.code")
 	ConfigDir  string // config dir relative to home (e.g., ".claude")
-	Skills     string // field name for skills
-	Plugins    string // field name for plugins
-	MCPServers string // field name for MCP servers
-	Rules      string // field name for rules
+	Skills     string // query suffix for skills (with field selection)
+	Plugins    string // query suffix for plugins
+	MCPServers string // query suffix for MCP servers
+	Rules      string // query suffix for rules
 }
 
 var agents = []agentDef{
@@ -87,23 +87,24 @@ var agents = []agentDef{
 		Platform:   "Claude Code",
 		Resource:   "claude.code",
 		ConfigDir:  ".claude",
-		Skills:     "skills",
-		Plugins:    "plugins",
-		MCPServers: "mcpServers",
+		Skills:     "skills { name description content source }",
+		Plugins:    "plugins { name version enabled }",
+		MCPServers: "mcpServers { name }",
 	},
 	{
 		Platform:   "OpenAI Codex",
 		Resource:   "openai.codex",
 		ConfigDir:  ".codex",
-		Skills:     "skills",
-		Plugins:    "plugins",
-		MCPServers: "mcpServers",
+		Skills:     "skills { name description content source }",
+		Plugins:    "plugins { name version }",
+		MCPServers: "mcpServers { name url }",
 	},
 	// Additional agents will be added as their MQL resources are merged:
 	// cursor, github.copilot, goose, gemini, windsurf, zed
 }
 
-// buildQuery constructs an MQL query like: claude.code(configPath: "/Users/chris/.claude").skills
+// buildQuery constructs an MQL query like:
+// claude.code(configPath: "/Users/chris/.claude").skills { name content }
 func buildQuery(resource, configPath, field string) string {
 	return fmt.Sprintf(`%s(configPath: %q).%s`, resource, configPath, field)
 }
