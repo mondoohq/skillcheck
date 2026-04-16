@@ -17,10 +17,10 @@ More agents (Cursor, GitHub Copilot, Goose, Gemini CLI, Windsurf, Zed) are comin
 
 ```bash
 # Run directly (no install needed)
-npx @mondoo/skillcheck
+npx @mondoohq/skillcheck
 
 # Or install globally via npm
-npm i -g @mondoo/skillcheck
+npm i -g @mondoohq/skillcheck
 
 # Or via Homebrew
 brew install mondoohq/mondoo/skillcheck

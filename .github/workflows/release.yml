@@ -36,7 +36,7 @@ jobs:
       - name: Publish to npm
         uses: evg4b/goreleaser-npm-publisher-action@v1.2.0
         with:
-          prefix: "@mondoo"
+          prefix: "@mondoohq"
           token: ${{ secrets.NPM_TOKEN }}
           description: >
             AI agent skill security scanner. Detects locally installed
