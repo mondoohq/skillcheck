@@ -1,0 +1,35 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: Apache-2.0
+
+# Extended linting config for CI — stricter than local development.
+
+version: "2"
+run:
+  modules-download-mode: readonly
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    govet:
+      enable:
+        - structtag
+        - lostcancel
+      disable-all: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false

@@ -24,8 +24,8 @@ type SkillResult struct {
 	Hash        string  `json:"hash"`
 	Source      string  `json:"source,omitempty"`
 	Status      string  `json:"status,omitempty"`      // affected, clean, unknown
-	RiskScore   float64 `json:"riskScore,omitempty"`    // 0-100
-	TopSeverity string  `json:"topSeverity,omitempty"`  // critical, high, medium, low
+	RiskScore   float64 `json:"riskScore,omitempty"`   // 0-100
+	TopSeverity string  `json:"topSeverity,omitempty"` // critical, high, medium, low
 	Summary     string  `json:"summary,omitempty"`
 	PURL        string  `json:"purl,omitempty"`
 	URL         string  `json:"url"`

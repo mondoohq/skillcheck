@@ -163,4 +163,3 @@ func (r *CLIReporter) severityBadge(severity string) string {
 		return "[" + upper + "]"
 	}
 }
-

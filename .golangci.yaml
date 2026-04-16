@@ -1,0 +1,37 @@
+# Copyright Mondoo, Inc. 2024, 2026
+# SPDX-License-Identifier: Apache-2.0
+
+version: "2"
+run:
+  modules-download-mode: readonly
+linters:
+  default: none
+  enable:
+    - depguard
+  settings:
+    depguard:
+      rules:
+        denied-packages:
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: no longer maintained; use github.com/cockroachdb/errors instead
+            - pkg: github.com/mitchellh/mapstructure
+              desc: no longer maintained; use github.com/go-viper/mapstructure/v2 instead
+    govet:
+      enable:
+        - structtag
+        - lostcancel
+      disable-all: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: false

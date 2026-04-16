@@ -171,7 +171,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 					}
 					agentResult.Skills = append(agentResult.Skills, sr)
 				}
-	
+
 			}
 		}
 
@@ -189,7 +189,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 						Enabled: getBool(plugin, "enabled"),
 					})
 				}
-	
+
 			}
 		}
 
@@ -207,7 +207,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 						URL:     getString(server, "url"),
 					})
 				}
-	
+
 			}
 		}
 
@@ -230,7 +230,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 						Hash:   hash,
 					})
 				}
-	
+
 			}
 		}
 

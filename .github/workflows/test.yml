@@ -1,20 +1,67 @@
-name: Test
+name: Code Test
 
 on:
   push:
-    branches: [main]
-  pull_request:
+    paths:
+      - "**.go"
+      - "**.mod"
+      - "go.sum"
+      - ".github/workflows/test.yml"
+      - ".golangci.yaml"
+      - ".github/.golangci.yaml"
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  go-mod:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: false
+      - name: Check go mod
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod
 
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+          args: --timeout=10m
+
+  golangci-lint-extended:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+          args: --timeout=10m --config .github/.golangci.yaml --only-new-issues
+
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - run: go build ./cmd/skillcheck/
-      - run: go test ./... -count=1
+      - run: go test ./... -count=1 -short
       - run: go vet ./...
