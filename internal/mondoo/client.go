@@ -13,15 +13,34 @@ import (
 
 const (
 	DefaultBaseURL = "https://mondoo.com/ai-agent-security"
-	apiPath        = "/api/v1/lookup"
+	searchPath     = "/api/v1/search/hash"
 )
 
-// Finding represents a security finding for a skill.
-type Finding struct {
-	Name       string   `json:"name"`
-	Severity   string   `json:"severity"` // critical, high, medium, low, info
-	Categories []string `json:"categories"`
-	URL        string   `json:"url"`
+// SearchResponse is the response from the hash search API.
+type SearchResponse struct {
+	Matches []HashMatch   `json:"matches"`
+	Reports []SkillReport `json:"reports"`
+}
+
+// HashMatch identifies a skill matching a hash.
+type HashMatch struct {
+	PURL     string `json:"purl"`
+	HashType string `json:"hash_type"`
+	Hash     string `json:"hash"`
+}
+
+// SkillReport is the security report for a skill.
+type SkillReport struct {
+	PURL         string  `json:"purl"`
+	Status       string  `json:"status"` // affected, clean, queued
+	RiskScore    float64 `json:"risk_score"`
+	Registry     string  `json:"registry"`
+	Owner        string  `json:"owner"`
+	Skill        string  `json:"skill"`
+	Version      string  `json:"version"`
+	Summary      string  `json:"summary"`
+	FindingCount int     `json:"finding_count"`
+	TopSeverity  string  `json:"top_severity"` // critical, high, medium, low
 }
 
 // Client queries the Mondoo AI Agent Security database.
@@ -40,39 +59,39 @@ func NewClient() *Client {
 	}
 }
 
-// Lookup queries the Mondoo database for a skill by name and hash.
-func (c *Client) Lookup(name, hash string) ([]Finding, error) {
-	findings, err := c.lookupAPI(name, hash)
-	if err == nil {
-		return findings, nil
-	}
-
-	// API not available — return empty findings with a URL for manual lookup
-	return nil, nil
-}
-
-// SkillURL returns the Mondoo web URL for a skill.
-func (c *Client) SkillURL(name string) string {
-	return fmt.Sprintf("%s/skills?q=%s", c.BaseURL, url.QueryEscape(name))
-}
-
-func (c *Client) lookupAPI(name, hash string) ([]Finding, error) {
-	u := fmt.Sprintf("%s%s?name=%s&hash=%s", c.BaseURL, apiPath,
-		url.QueryEscape(name), url.QueryEscape(hash))
+// SearchByHash queries the Mondoo database for a skill by its content hash.
+// Returns nil, nil if the hash is not found or the API is unavailable.
+func (c *Client) SearchByHash(hash string) (*SearchResponse, error) {
+	u := fmt.Sprintf("%s%s?q=%s", c.BaseURL, searchPath, url.QueryEscape(hash))
 
 	resp, err := c.HTTPClient.Get(u)
 	if err != nil {
-		return nil, fmt.Errorf("API request failed: %w", err)
+		return nil, nil // API unavailable — fail open
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status %d", resp.StatusCode)
+		return nil, nil // not found or server error — fail open
 	}
 
-	var findings []Finding
-	if err := json.NewDecoder(resp.Body).Decode(&findings); err != nil {
-		return nil, fmt.Errorf("failed to decode API response: %w", err)
+	var result SearchResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, nil
 	}
-	return findings, nil
+
+	if len(result.Matches) == 0 {
+		return nil, nil
+	}
+
+	return &result, nil
+}
+
+// SkillURL returns the Mondoo web URL for a skill name search.
+func (c *Client) SkillURL(name string) string {
+	return fmt.Sprintf("%s/skills?q=%s", c.BaseURL, url.QueryEscape(name))
+}
+
+// HashURL returns the Mondoo web URL for a specific hash.
+func (c *Client) HashURL(hash string) string {
+	return fmt.Sprintf("%s/hash/%s", c.BaseURL, hash)
 }

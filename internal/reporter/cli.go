@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"go.mondoo.com/skillcheck/internal/mondoo"
 )
 
 // CLIReporter writes scan results as colored terminal output.
@@ -51,28 +49,24 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 	if len(agent.Skills) > 0 {
 		fmt.Fprintf(r.Writer, "  Skills (%d):\n", len(agent.Skills))
 		for _, skill := range agent.Skills {
-			status := r.colorize("✓", "green")
-			if len(skill.Findings) > 0 {
-				maxSev := maxSeverity(skill.Findings)
-				status = r.severityIcon(maxSev)
+			icon := r.colorize("✓", "green")
+			if skill.Status == "affected" {
+				icon = r.severityIcon(skill.TopSeverity)
 			}
 			hashSuffix := ""
 			if skill.Hash != "" {
 				hashSuffix = " " + r.colorize(skill.Hash[:12], "dim")
 			}
-			fmt.Fprintf(r.Writer, "    %s %s%s\n", status, skill.Name, hashSuffix)
+			fmt.Fprintf(r.Writer, "    %s %s%s\n", icon, skill.Name, hashSuffix)
 
-			for _, f := range skill.Findings {
-				fmt.Fprintf(r.Writer, "      %s %s",
-					r.severityBadge(f.Severity), f.Name)
-				if len(f.Categories) > 0 {
-					fmt.Fprintf(r.Writer, " (%s)", strings.Join(f.Categories, ", "))
+			if skill.Status == "affected" {
+				fmt.Fprintf(r.Writer, "      %s %s\n",
+					r.severityBadge(skill.TopSeverity), skill.Summary)
+				if skill.URL != "" {
+					fmt.Fprintf(r.Writer, "      %s\n", r.colorize(skill.URL, "dim"))
 				}
-				fmt.Fprintln(r.Writer)
-			}
-
-			if skill.URL != "" && r.Verbose {
-				fmt.Fprintf(r.Writer, "      %s\n", skill.URL)
+			} else if r.Verbose && skill.URL != "" {
+				fmt.Fprintf(r.Writer, "      %s\n", r.colorize(skill.URL, "dim"))
 			}
 		}
 	}
@@ -170,15 +164,3 @@ func (r *CLIReporter) severityBadge(severity string) string {
 	}
 }
 
-func maxSeverity(findings []mondoo.Finding) string {
-	order := map[string]int{"critical": 4, "high": 3, "medium": 2, "low": 1, "info": 0}
-	max := ""
-	maxOrder := -1
-	for _, f := range findings {
-		if o, ok := order[f.Severity]; ok && o > maxOrder {
-			maxOrder = o
-			max = f.Severity
-		}
-	}
-	return max
-}

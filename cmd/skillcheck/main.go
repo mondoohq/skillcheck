@@ -155,11 +155,19 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 						Name:   name,
 						Hash:   hash,
 						Source: getString(skill, "source"),
+						Status: "unknown",
 						URL:    client.SkillURL(name),
 					}
 					if hash != "" {
-						findings, _ := client.Lookup(name, hash)
-						sr.Findings = findings
+						if resp, _ := client.SearchByHash(hash); resp != nil && len(resp.Reports) > 0 {
+							report := resp.Reports[0]
+							sr.Status = report.Status
+							sr.RiskScore = report.RiskScore
+							sr.TopSeverity = report.TopSeverity
+							sr.Summary = report.Summary
+							sr.PURL = report.PURL
+							sr.URL = client.HashURL(hash)
+						}
 					}
 					agentResult.Skills = append(agentResult.Skills, sr)
 				}

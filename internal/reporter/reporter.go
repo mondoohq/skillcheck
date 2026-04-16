@@ -3,8 +3,6 @@
 
 package reporter
 
-import "go.mondoo.com/skillcheck/internal/mondoo"
-
 // ScanResult holds all scan results.
 type ScanResult struct {
 	Agents []AgentResult `json:"agents"`
@@ -22,11 +20,15 @@ type AgentResult struct {
 
 // SkillResult holds a single skill's scan result.
 type SkillResult struct {
-	Name     string           `json:"name"`
-	Hash     string           `json:"hash"`
-	Source   string           `json:"source,omitempty"`
-	Findings []mondoo.Finding `json:"findings,omitempty"`
-	URL      string           `json:"url"`
+	Name        string  `json:"name"`
+	Hash        string  `json:"hash"`
+	Source      string  `json:"source,omitempty"`
+	Status      string  `json:"status,omitempty"`      // affected, clean, unknown
+	RiskScore   float64 `json:"riskScore,omitempty"`    // 0-100
+	TopSeverity string  `json:"topSeverity,omitempty"`  // critical, high, medium, low
+	Summary     string  `json:"summary,omitempty"`
+	PURL        string  `json:"purl,omitempty"`
+	URL         string  `json:"url"`
 }
 
 // PluginResult holds a single plugin's info.
@@ -50,14 +52,12 @@ type RuleResult struct {
 	Hash   string `json:"hash"`
 }
 
-// HasCriticalOrHigh returns true if any skill has critical or high findings.
+// HasCriticalOrHigh returns true if any skill has critical or high-severity reports.
 func (r *ScanResult) HasCriticalOrHigh() bool {
 	for _, agent := range r.Agents {
 		for _, skill := range agent.Skills {
-			for _, f := range skill.Findings {
-				if f.Severity == "critical" || f.Severity == "high" {
-					return true
-				}
+			if skill.TopSeverity == "critical" || skill.TopSeverity == "high" {
+				return true
 			}
 		}
 	}
