@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  id-token: write # npm provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to npm
+        uses: evg4b/goreleaser-npm-publisher-action@v1.2.0
+        with:
+          prefix: "@mondoo"
+          token: ${{ secrets.NPM_TOKEN }}
+          description: >
+            AI agent skill security scanner. Detects locally installed
+            agent skills, computes SHA-256 checksums, and queries the
+            Mondoo AI Agent Security database for known threats.
+          keywords: ai-security,agent-skills,skillcheck,mondoo,cli,devsecops,prompt-injection,supply-chain
+          license: Apache-2.0
+          homepage: https://mondoo.com/ai-agent-security
+          author: Mondoo Inc. <hello@mondoo.com>

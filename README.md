@@ -16,11 +16,20 @@ More agents (Cursor, GitHub Copilot, Goose, Gemini CLI, Windsurf, Zed) are comin
 ## Install
 
 ```bash
-# Build from source
-make build
+# Run directly (no install needed)
+npx @mondoo/skillcheck
 
-# Or with go install
-go install go.mondoo.com/skillcheck/cmd/skillcheck@latest
+# Or install globally via npm
+npm i -g @mondoo/skillcheck
+
+# Or via Homebrew
+brew install mondoohq/mondoo/skillcheck
+
+# Or download from GitHub Releases
+# https://github.com/mondoohq/skillcheck/releases
+
+# Or build from source
+make build
 ```
 
 ## Usage
@@ -92,4 +101,4 @@ skillcheck/
 
 - [Mondoo AI Agent Security](https://mondoo.com/ai-agent-security)
 - [Mondoo Skill Database](https://mondoo.com/ai-agent-security/skills)
-- [ADR-001: Go + npm via GoReleaser](ADR-001-skillcheck-go-npm-goreleaser.md)
+- [Mondoo Security Checks](https://mondoo.com/ai-agent-security/checks)
