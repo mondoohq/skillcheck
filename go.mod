@@ -3,6 +3,7 @@ module go.mondoo.com/skillcheck
 go 1.25.8
 
 require (
+	github.com/rs/zerolog v1.35.0
 	github.com/spf13/cobra v1.10.2
 	go.mondoo.com/mql/v13 v13.5.0
 )
@@ -201,7 +202,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
-	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
@@ -277,5 +277,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace go.mondoo.com/mql/v13 => ../mql

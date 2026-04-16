@@ -16,6 +16,8 @@ permissions:
 jobs:
   go-mod:
     runs-on: ubuntu-latest
+    env:
+      GOPRIVATE: go.mondoo.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -53,7 +55,8 @@ jobs:
       - uses: golangci/golangci-lint-action@v7
         with:
           version: latest
-          args: --timeout=10m --config .github/.golangci.yaml --only-new-issues
+          args: --timeout=10m --config .github/.golangci.yaml
+          only-new-issues: true
 
   go-test:
     runs-on: ubuntu-latest
