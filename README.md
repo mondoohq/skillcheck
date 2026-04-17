@@ -19,29 +19,17 @@ skillcheck detects locally installed AI agent skills, computes SHA-256 checksums
 
 More agents (Cursor, GitHub Copilot, Goose, Gemini CLI, Windsurf, Zed) are coming soon.
 
-## Install
-
-```bash
-# Run directly (no install needed)
-npx @mondoohq/skillcheck
-
-# Or install globally
-npm i -g @mondoohq/skillcheck
-```
-
-Binaries for macOS, Linux, and Windows are also available on [GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
-
 ## Usage
 
 ```bash
 # Scan all detected agents
-skillcheck
+npx @mondoohq/skillcheck
 
 # JSON output for CI/CD pipelines
-skillcheck --json
+npx @mondoohq/skillcheck --json
 
 # Verbose output with full hashes and report URLs
-skillcheck --verbose
+npx @mondoohq/skillcheck --verbose
 ```
 
 ### CI/CD Integration
@@ -57,6 +45,15 @@ skillcheck exits with code **1** when critical or high-risk skills are found, ma
 # Any CI pipeline
 npx @mondoohq/skillcheck --json --no-color
 ```
+
+### Other Install Methods
+
+```bash
+# Install globally via npm
+npm i -g @mondoohq/skillcheck
+```
+
+Binaries for macOS, Linux, and Windows are also available on [GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
 
 ## What Gets Checked
 
