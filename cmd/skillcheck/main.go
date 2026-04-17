@@ -166,7 +166,9 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 							sr.TopSeverity = report.TopSeverity
 							sr.Summary = report.Summary
 							sr.PURL = report.PURL
-							sr.URL = client.HashURL(hash)
+							if u := client.ReportURL(&report); u != "" {
+								sr.URL = u
+							}
 						}
 					}
 					agentResult.Skills = append(agentResult.Skills, sr)

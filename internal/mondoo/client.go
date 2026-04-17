@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -91,7 +92,29 @@ func (c *Client) SkillURL(name string) string {
 	return fmt.Sprintf("%s/skills?q=%s", c.BaseURL, url.QueryEscape(name))
 }
 
-// HashURL returns the Mondoo web URL for a specific hash.
-func (c *Client) HashURL(hash string) string {
-	return fmt.Sprintf("%s/hash/%s", c.BaseURL, hash)
+// ReportURL returns the Mondoo web URL for a specific skill report.
+// Returns empty string if report is nil or any path component is missing.
+func (c *Client) ReportURL(report *SkillReport) string {
+	if report == nil || report.Registry == "" || report.Owner == "" || report.Skill == "" || report.Version == "" {
+		return ""
+	}
+	// Skill may contain path separators (e.g. "skills/find-skills"),
+	// escape each segment independently to preserve the path structure.
+	skillPath := escapePathSegments(report.Skill)
+	return fmt.Sprintf("%s/skills/%s/%s/%s/%s",
+		c.BaseURL,
+		url.PathEscape(report.Registry),
+		url.PathEscape(report.Owner),
+		skillPath,
+		url.PathEscape(report.Version))
+}
+
+// escapePathSegments splits on "/" and escapes each segment individually,
+// preserving path separators.
+func escapePathSegments(s string) string {
+	parts := strings.Split(s, "/")
+	for i, p := range parts {
+		parts[i] = url.PathEscape(p)
+	}
+	return strings.Join(parts, "/")
 }
