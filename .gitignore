@@ -1,3 +1,5 @@
 ADR-001-skillcheck-go-npm-goreleaser.md
 /skillcheck
 dist/
+demo.tape
+demo.png

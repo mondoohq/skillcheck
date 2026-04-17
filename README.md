@@ -4,6 +4,8 @@ AI agent skill security scanner by [Mondoo](https://mondoo.com/ai-agent-security
 
 Detects locally installed AI agent skills, computes SHA-256 checksums, and queries the Mondoo AI Agent Security database for known threats — prompt injection, credential theft, data exfiltration, and 25+ other threat categories.
 
+![skillcheck demo](demo.gif)
+
 ## Supported Agents
 
 | Agent | Config | What's Detected |
