@@ -34,15 +34,6 @@ archives:
 checksum:
   name_template: "checksums.txt"
 
-brews:
-  - name: skillcheck
-    repository:
-      owner: mondoohq
-      name: homebrew-mondoo
-    homepage: https://mondoo.com/ai-agent-security
-    description: AI agent skill security scanner by Mondoo
-    license: Apache-2.0
-
 release:
   github:
     owner: mondoohq
