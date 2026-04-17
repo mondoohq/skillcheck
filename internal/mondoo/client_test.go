@@ -119,6 +119,41 @@ func TestSearchByHash_APIUnavailable(t *testing.T) {
 	}
 }
 
+func TestReportURL(t *testing.T) {
+	client := &Client{BaseURL: "https://mondoo.com/ai-agent-security"}
+
+	// Fully populated report with slash in Skill
+	got := client.ReportURL(&SkillReport{
+		Registry: "github",
+		Owner:    "vercel-labs",
+		Skill:    "skills/find-skills",
+		Version:  "004c73806e35",
+	})
+	want := "https://mondoo.com/ai-agent-security/skills/github/vercel-labs/skills/find-skills/004c73806e35"
+	if got != want {
+		t.Errorf("ReportURL =\n  %s\nwant\n  %s", got, want)
+	}
+}
+
+func TestReportURL_EmptyField(t *testing.T) {
+	client := &Client{BaseURL: "https://mondoo.com/ai-agent-security"}
+
+	if got := client.ReportURL(&SkillReport{Registry: "github", Owner: "owner", Skill: "", Version: "v1"}); got != "" {
+		t.Errorf("expected empty URL for missing Skill, got %s", got)
+	}
+	if got := client.ReportURL(&SkillReport{}); got != "" {
+		t.Errorf("expected empty URL for empty report, got %s", got)
+	}
+}
+
+func TestReportURL_Nil(t *testing.T) {
+	client := &Client{BaseURL: "https://mondoo.com/ai-agent-security"}
+
+	if got := client.ReportURL(nil); got != "" {
+		t.Errorf("expected empty URL for nil report, got %s", got)
+	}
+}
+
 func TestSearchByHash_LiveAPI(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping live API test in short mode")
