@@ -50,13 +50,8 @@ func main() {
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
 	rootCmd.Flags().BoolVar(&verbose, "verbose", false, "Show detailed output including hashes and URLs")
 
-	rootCmd.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "Print version information",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("skillcheck %s (commit: %s, built: %s)\n", version, commit, date)
-		},
-	})
+	rootCmd.Version = version
+	rootCmd.SetVersionTemplate("skillcheck {{ .Version }} (commit: " + commit + ", built: " + date + ")\n")
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
