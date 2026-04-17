@@ -27,9 +27,6 @@ npx @mondoohq/skillcheck
 
 # Or install globally
 npm i -g @mondoohq/skillcheck
-
-# Or via Homebrew
-brew install mondoohq/mondoo/skillcheck
 ```
 
 Binaries for macOS, Linux, and Windows are also available on [GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
