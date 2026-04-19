@@ -847,6 +847,8 @@ github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
+github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd h1:Rf9uhF1+VJ7ZHqxrG8pJ6YacmHvVCmByDmGbAWCc/gA=
+github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd/go.mod h1:EbW0wDK/qEUYI0A5bqq0C2kF8JTQwWONmGDBbzsxxHo=
 github.com/terminalstatic/go-xsd-validate v0.1.6 h1:TenYeQ3eY631qNi1/cTmLH/s2slHPRKTTHT+XSHkepo=
 github.com/terminalstatic/go-xsd-validate v0.1.6/go.mod h1:18lsvYFofBflqCrvo1umpABZ99+GneNTw2kEEc8UPJw=
 github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde h1:AMNpJRc7P+GTwVbl8DkK2I9I8BBUzNiHuH/tlxrpan0=
@@ -879,8 +881,8 @@ go.etcd.io/etcd/client/pkg/v3 v3.5.1/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3
 go.etcd.io/etcd/client/v2 v2.305.1/go.mod h1:pMEacxZW7o8pg4CrFE7pquyCJJzZvkvdD2RibOCCCGs=
 go.mondoo.com/mondoo-go v0.0.0-20260410121724-8588298e53e3 h1:ArartArNQh/gZS8V1u1iKhaTq4AiDhJUpN8oMHPK2QI=
 go.mondoo.com/mondoo-go v0.0.0-20260410121724-8588298e53e3/go.mod h1:71ONiTX5I/jMdghOaeovcexBvxPvD1WcZqAEzz4RGOs=
-go.mondoo.com/mql/v13 v13.5.1-0.20260417122018-3b9965a95400 h1:Z4ZZVlzLLlnzPbo04u0fZIcOnNu47iW6efcjDoG8DgE=
-go.mondoo.com/mql/v13 v13.5.1-0.20260417122018-3b9965a95400/go.mod h1:D4VBaxBnr85VR2fVSURmlMkOePqoI0WgNhxDSvIfI6Q=
+go.mondoo.com/mql/v13 v13.5.1-0.20260419141825-fb9bfc3485da h1:eRRSj3KmijSk4GRTLWXQgwKuZGeGiCvQojO6vBjs34I=
+go.mondoo.com/mql/v13 v13.5.1-0.20260419141825-fb9bfc3485da/go.mod h1:fZ2CbY2dmjBBiLIKJDuW9HqEGFfzsR/n0kxIRRw6zik=
 go.mondoo.com/ranger-rpc v0.8.0 h1:iBY34IhtPNPnEOZ9eS5t3Gp28HiTuv/M0SaHiBiRJlI=
 go.mondoo.com/ranger-rpc v0.8.0/go.mod h1:JbxC6J5d0pQwVGZ9efmq7amMzasEETKH80zPd0TcBug=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

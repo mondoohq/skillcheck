@@ -14,10 +14,25 @@ skillcheck detects locally installed AI agent skills, computes SHA-256 checksums
 
 | Agent | What's Detected |
 |-------|-----------------|
-| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | skills, plugins, MCP servers |
-| [OpenAI Codex](https://openai.com/index/introducing-codex/) | skills, plugins, MCP servers |
-
-More agents (Cursor, GitHub Copilot, Goose, Gemini CLI, Windsurf, Zed) are coming soon.
+| Claude Code | skills, plugins, MCP servers |
+| OpenAI Codex | skills, plugins, MCP servers |
+| Cursor | skills, MCP servers, rules |
+| GitHub Copilot | skills, MCP servers |
+| Goose | skills, extensions |
+| Gemini CLI | skills, MCP servers |
+| Windsurf | skills, rules, MCP servers |
+| Roo | skills |
+| Cline | skills |
+| Kiro | skills |
+| Continue | skills |
+| Trae | skills |
+| OpenCode | skills |
+| Pi | skills |
+| Mistral Vibe | skills |
+| Antigravity | skills |
+| OpenClaw | skills |
+| IBM Bob | skills |
+| Snowflake Cortex | skills |
 
 ## Usage
 

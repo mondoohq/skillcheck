@@ -78,6 +78,7 @@ type agentDef struct {
 }
 
 var agents = []agentDef{
+	// Tier 1: Full support (skills, plugins, MCP servers)
 	{
 		Platform:   "Claude Code",
 		Resource:   "claude.code",
@@ -94,8 +95,118 @@ var agents = []agentDef{
 		Plugins:    "plugins { name version }",
 		MCPServers: "mcpServers { name url }",
 	},
-	// Additional agents will be added as their MQL resources are merged:
-	// cursor, github.copilot, goose, gemini, windsurf, zed
+
+	// Tier 2: MCP servers, rules, extensions
+	{
+		Platform:   "Cursor",
+		Resource:   "cursor",
+		ConfigDir:  ".cursor",
+		Skills:     "skills { name description content source }",
+		MCPServers: "mcpServers { name command url }",
+		Rules:      "rules { name content source }",
+	},
+	{
+		Platform:   "GitHub Copilot",
+		Resource:   "github.copilot",
+		ConfigDir:  ".config/github-copilot",
+		Skills:     "skills { name description content source }",
+		MCPServers: "mcpServers { name type command }",
+	},
+	{
+		Platform:  "Goose",
+		Resource:  "goose",
+		ConfigDir: ".config/goose",
+		Skills:    "skills { name description content source }",
+		Plugins:   "extensions { name enabled type description }", // Goose calls them "extensions"
+	},
+	{
+		Platform:   "Gemini CLI",
+		Resource:   "gemini",
+		ConfigDir:  ".gemini",
+		Skills:     "skills { name description content source }",
+		MCPServers: "mcpServers { name command }",
+	},
+	{
+		Platform:   "Windsurf",
+		Resource:   "windsurf",
+		ConfigDir:  ".codeium/windsurf",
+		Skills:     "skills { name description content source }",
+		Rules:      "rules { name content source }",
+		MCPServers: "mcpServers { name command }",
+	},
+	// Tier 3: Skill-only agents
+	{
+		Platform:  "Roo",
+		Resource:  "roo",
+		ConfigDir: ".roo",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Cline",
+		Resource:  "cline",
+		ConfigDir: ".cline",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Kiro",
+		Resource:  "kiro",
+		ConfigDir: ".kiro",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Continue",
+		Resource:  "continuedev",
+		ConfigDir: ".continue",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Trae",
+		Resource:  "trae",
+		ConfigDir: ".trae",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "OpenCode",
+		Resource:  "opencode",
+		ConfigDir: ".config/opencode",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Pi",
+		Resource:  "pi",
+		ConfigDir: ".pi/agent",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Mistral Vibe",
+		Resource:  "mistral.vibe",
+		ConfigDir: ".vibe",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Antigravity",
+		Resource:  "antigravity",
+		ConfigDir: ".gemini/antigravity",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "OpenClaw",
+		Resource:  "openclaw",
+		ConfigDir: ".openclaw",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "IBM Bob",
+		Resource:  "ibm.bob",
+		ConfigDir: ".bob",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Snowflake Cortex",
+		Resource:  "snowflake.cortex",
+		ConfigDir: ".snowflake/cortex",
+		Skills:    "skills { name description content source }",
+	},
 }
 
 // buildQuery constructs an MQL query like:
