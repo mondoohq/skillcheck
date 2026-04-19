@@ -5,7 +5,7 @@ go 1.25.8
 require (
 	github.com/rs/zerolog v1.35.0
 	github.com/spf13/cobra v1.10.2
-	go.mondoo.com/mql/v13 v13.5.1-0.20260417122018-3b9965a95400
+	go.mondoo.com/mql/v13 v13.5.1-0.20260419141825-fb9bfc3485da
 )
 
 require (
@@ -218,6 +218,7 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.21.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/tailscale/hujson v0.0.0-20260302212456-ecc657c15afd // indirect
 	github.com/tidwall/transform v0.0.0-20201103190739-32f242e2dbde // indirect
 	github.com/tonistiigi/go-csvvalue v0.0.0-20240814133006-030d3b2625d0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
