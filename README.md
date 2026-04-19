@@ -12,33 +12,33 @@ skillcheck detects locally installed AI agent skills, computes SHA-256 checksums
 
 ## Supported Agents
 
-| Agent | What's Detected |
-|-------|-----------------|
-| Claude Code | skills, plugins, MCP servers |
-| OpenAI Codex | skills, plugins, MCP servers |
-| Cursor | skills, MCP servers, rules |
-| GitHub Copilot | skills, MCP servers |
-| Goose | skills, extensions |
-| Gemini CLI | skills, MCP servers |
-| Windsurf | skills, rules, MCP servers |
-| Roo | skills |
-| Cline | skills |
-| Kiro | skills |
-| Continue | skills |
-| Trae | skills |
-| OpenCode | skills |
-| Pi | skills |
-| Mistral Vibe | skills |
-| Antigravity | skills |
-| OpenClaw | skills |
-| IBM Bob | skills |
-| Snowflake Cortex | skills |
-| Junie | skills |
-| Augment | skills |
-| Warp | skills |
-| Kilo Code | skills |
-| OpenHands | skills |
-| Qwen Code | skills |
+| Agent | Config | Skills | What's Detected |
+|-------|--------|--------|-----------------|
+| Antigravity | `~/.gemini/antigravity/` | `~/.gemini/antigravity/skills/` | skills |
+| Augment | `~/.augment/` | `~/.augment/skills/` | skills |
+| Claude Code | `~/.claude/` | `~/.claude/skills/` | skills, plugins, MCP servers |
+| Cline | `~/.cline/` | `~/.cline/skills/` | skills |
+| Continue | `~/.continue/` | `~/.continue/skills/` | skills |
+| Cursor | `~/.cursor/` | `~/.cursor/skills/` | skills, MCP servers, rules |
+| Gemini CLI | `~/.gemini/` | `~/.gemini/skills/` | skills, MCP servers |
+| GitHub Copilot | `~/.config/github-copilot/` | `~/.config/github-copilot/skills/` | skills, MCP servers |
+| Goose | `~/.config/goose/` | `~/.config/goose/skills/` | skills, extensions |
+| IBM Bob | `~/.bob/` | `~/.bob/skills/` | skills |
+| Junie | `~/.junie/` | `~/.junie/skills/` | skills |
+| Kilo Code | `~/.kilocode/` | `~/.kilocode/skills/` | skills |
+| Kiro | `~/.kiro/` | `~/.kiro/skills/` | skills |
+| Mistral Vibe | `~/.vibe/` | `~/.vibe/skills/` | skills |
+| OpenAI Codex | `~/.codex/` | `~/.codex/skills/` | skills, plugins, MCP servers |
+| OpenClaw | `~/.openclaw/` | `~/.openclaw/skills/` | skills |
+| OpenCode | `~/.config/opencode/` | `~/.config/opencode/skills/` | skills |
+| OpenHands | `~/.openhands/` | `~/.openhands/skills/` | skills |
+| Pi | `~/.pi/agent/` | `~/.pi/agent/skills/` | skills |
+| Qwen Code | `~/.qwen/` | `~/.qwen/skills/` | skills |
+| Roo | `~/.roo/` | `~/.roo/skills/` | skills |
+| Snowflake Cortex | `~/.snowflake/cortex/` | `~/.snowflake/cortex/skills/` | skills |
+| Trae | `~/.trae/` | `~/.trae/skills/` | skills |
+| Warp | `~/.warp/` | `~/.warp/skills/` | skills |
+| Windsurf | `~/.codeium/windsurf/` | `~/.codeium/windsurf/skills/` | skills, MCP servers, rules |
 
 ## Usage
 
