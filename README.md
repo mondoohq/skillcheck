@@ -33,6 +33,12 @@ skillcheck detects locally installed AI agent skills, computes SHA-256 checksums
 | OpenClaw | skills |
 | IBM Bob | skills |
 | Snowflake Cortex | skills |
+| Junie | skills |
+| Augment | skills |
+| Warp | skills |
+| Kilo Code | skills |
+| OpenHands | skills |
+| Qwen Code | skills |
 
 ## Usage
 
