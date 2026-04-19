@@ -5,7 +5,7 @@ go 1.25.8
 require (
 	github.com/rs/zerolog v1.35.0
 	github.com/spf13/cobra v1.10.2
-	go.mondoo.com/mql/v13 v13.5.1-0.20260419141825-fb9bfc3485da
+	go.mondoo.com/mql/v13 v13.5.1-0.20260419155624-90f6b21be421
 )
 
 require (

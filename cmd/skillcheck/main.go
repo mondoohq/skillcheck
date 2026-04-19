@@ -207,6 +207,42 @@ var agents = []agentDef{
 		ConfigDir: ".snowflake/cortex",
 		Skills:    "skills { name description content source }",
 	},
+	{
+		Platform:  "Junie",
+		Resource:  "junie",
+		ConfigDir: ".junie",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Augment",
+		Resource:  "augment",
+		ConfigDir: ".augment",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Warp",
+		Resource:  "warp",
+		ConfigDir: ".warp",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Kilo Code",
+		Resource:  "kilocode",
+		ConfigDir: ".kilocode",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "OpenHands",
+		Resource:  "openhands",
+		ConfigDir: ".openhands",
+		Skills:    "skills { name description content source }",
+	},
+	{
+		Platform:  "Qwen Code",
+		Resource:  "qwen.code",
+		ConfigDir: ".qwen",
+		Skills:    "skills { name description content source }",
+	},
 }
 
 // buildQuery constructs an MQL query like:
