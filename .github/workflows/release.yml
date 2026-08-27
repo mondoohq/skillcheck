@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to npm
-        uses: evg4b/goreleaser-npm-publisher-action@e4ddd52e3d21a1eda6436815eca2a884ce32762e # v1.5.0
+        uses: evg4b/goreleaser-npm-publisher-action@16087d5aafd974ba267f861cc3723f52ea14d6e4 # v1.6.0
         with:
           prefix: "@mondoohq"
           token: ${{ secrets.NPM_TOKEN }}
