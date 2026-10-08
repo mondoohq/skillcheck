@@ -22,6 +22,17 @@ import (
 //go:embed policy/repo-contract.mql.yaml
 var policyData []byte
 
+// parsedBundle is the embedded policy, parsed once at startup. The data is an
+// immutable embedded blob, so a parse failure is a build/developer error, not a
+// runtime condition — panic rather than return it from every Run call.
+var parsedBundle bundle
+
+func init() {
+	if err := yaml.Unmarshal(policyData, &parsedBundle); err != nil {
+		panic(fmt.Sprintf("validate: parse embedded policy: %v", err))
+	}
+}
+
 // Execer is the slice of the MQL engine the runner needs: run one query with
 // properties and get the raw result. *engine.Engine satisfies it.
 type Execer interface {
@@ -89,16 +100,11 @@ func Run(eng Execer, repo string) (Result, error) {
 		return Result{}, fmt.Errorf("resolve repo path: %w", err)
 	}
 
-	var b bundle
-	if err := yaml.Unmarshal(policyData, &b); err != nil {
-		return Result{}, fmt.Errorf("parse embedded policy: %w", err)
-	}
-
 	props := mqlc.SimpleProps{"repo": llx.StringPrimitive(abs)}
 	res := Result{Repo: abs}
 
-	for _, p := range b.Policies {
-		res.Policy = p.UID
+	for _, p := range parsedBundle.Policies {
+		res.Policy = p.UID // NOTE: assumes a single-policy bundle (the embedded one is)
 		for _, g := range p.Groups {
 			for _, c := range g.Checks {
 				cr := CheckResult{Group: g.Title, UID: c.UID, Title: c.Title}

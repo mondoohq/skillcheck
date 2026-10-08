@@ -56,10 +56,24 @@ func TestRun(t *testing.T) {
 			}
 		}
 		// The uppercase name still equals its directory and is within length,
-		// so those checks must still pass — the failures are specific.
+		// so those checks must still pass — the failures are specific, not a
+		// blanket "everything failed".
+		mustPass := map[string]bool{
+			"skill-name-matches-directory": false,
+			"skill-name-length":            false,
+			"skill-description-length":     false,
+		}
 		for _, c := range res.Checks {
-			if c.UID == "skill-name-matches-directory" && !c.Pass {
-				t.Errorf("skill-name-matches-directory should pass (name==dir), got error: %s", c.Error)
+			if _, want := mustPass[c.UID]; want {
+				mustPass[c.UID] = c.Pass
+				if !c.Pass {
+					t.Errorf("check %q should pass for the bad fixture, got error: %s", c.UID, c.Error)
+				}
+			}
+		}
+		for uid, passed := range mustPass {
+			if !passed {
+				t.Errorf("expected check %q to be present and pass, but it was absent", uid)
 			}
 		}
 	})
