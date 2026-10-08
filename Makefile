@@ -17,9 +17,9 @@ build:
 test:
 	go test ./... -count=1
 
-# npm packaging, publish ordering and launcher exit-code tests (needs node >= 18)
+# npm packaging, publish ordering, launcher exit-code and Slack message tests (needs node >= 18)
 test-npm:
-	node --test scripts/npm-package.test.mjs
+	node --test scripts/*.test.mjs
 
 lint:
 	golangci-lint run ./...
