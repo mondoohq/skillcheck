@@ -9,13 +9,17 @@ LDFLAGS  = -s -w \
            -X main.commit=$(COMMIT) \
            -X main.date=$(DATE)
 
-.PHONY: build test lint clean
+.PHONY: build test test-npm lint clean
 
 build:
 	CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(PROJECT_NAME) $(MAIN)
 
 test:
 	go test ./... -count=1
+
+# npm packaging, publish ordering and launcher exit-code tests (needs node >= 18)
+test-npm:
+	node --test scripts/npm-package.test.mjs
 
 lint:
 	golangci-lint run ./...

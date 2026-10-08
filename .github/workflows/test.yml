@@ -9,6 +9,9 @@ on:
       - ".github/workflows/test.yml"
       - ".golangci.yaml"
       - ".github/.golangci.yaml"
+      - "npm/**"
+      - "scripts/**"
+      - ".github/workflows/release.yml"
 
 permissions:
   contents: read
@@ -68,3 +71,15 @@ jobs:
       - run: go build ./cmd/skillcheck/
       - run: go test ./... -count=1 -short
       - run: go vet ./...
+
+  npm-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.17.0"
+      - name: npm packager and launcher tests
+        run: node --test scripts/npm-package.test.mjs
+      - name: verify script parses
+        run: bash -n scripts/verify-npm-release.sh
