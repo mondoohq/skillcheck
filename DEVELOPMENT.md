@@ -15,13 +15,18 @@ make lint
 
 ## Update MQL schemas
 
-When the MQL OS provider changes (new resources or fields), update the embedded schemas:
+The embedded schemas (`internal/engine/schemas/`) must match the mql version in `go.mod`.
+After bumping mql, regenerate them:
 
 ```bash
+go get go.mondoo.com/mql@<version or commit> && go mod tidy
 make schemas
 ```
 
-This copies `os.resources.json` and `core.resources.json` from the local `../mql` checkout.
+`make schemas` runs `scripts/gen-schemas.sh`, which builds mql's `mqlr` tool from the pinned
+module and generates `os.resources.json` and `core.resources.json` from its `.lr` files (mql
+does not commit the JSON). No local mql checkout is needed. CI fails when the committed
+schemas differ from what the pinned version generates.
 
 ## Architecture
 
