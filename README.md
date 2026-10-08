@@ -48,8 +48,9 @@ It fails open: a skill the database hasn't analyzed yet shows as clean and never
 
 If you publish skills, `validate` checks your repository against the
 [Agent Skills](https://agentskills.io/specification) and [AGENTS.md](https://agents.md/)
-specifications — catching bad skill names, oversized descriptions, and a missing
-`AGENTS.md` or marketplace manifest before your users do.
+specifications — catching broken frontmatter, bad skill names, oversized descriptions,
+and a missing `AGENTS.md` or marketplace manifest before your users do. It finds every
+`SKILL.md` in the repository, including skills nested in plugin directories.
 
 ```bash
 npx @mondoohq/skillcheck validate .                    # current directory
@@ -60,15 +61,18 @@ npx @mondoohq/skillcheck validate ./my-skills --json   # any path, JSON output
 Validating /path/to/repo
 
 Agent Skills spec (SKILL.md)
+  ✓ The repository contains at least one skill (a SKILL.md file)
+  ✓ Every SKILL.md starts with valid YAML frontmatter with correctly typed fields
   ✓ Every skill name is a lowercase slug (a-z0-9, single hyphens)
   ✓ Every skill name is 1-64 characters
   ✓ Every skill name equals its directory name
   ✓ Every skill description is 1-1024 characters
+  ✓ Every skill compatibility note is at most 500 characters
 Repository contract (agents.md + marketplace)
   ✓ A root AGENTS.md exists (agents.md convention)
   ✓ .claude-plugin/marketplace.json exists and lists plugins
 
-PASS 6 passed, 0 failed
+PASS 9 passed, 0 failed
 ```
 
 It exits **1** if any check fails, so it drops straight into a skills repo's CI. The rules

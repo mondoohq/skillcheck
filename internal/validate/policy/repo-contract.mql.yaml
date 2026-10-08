@@ -6,7 +6,12 @@
 # bundle and runs each check's `mql` through the compiled-in MQL engine against a
 # repository path, injected as the property `repo`. The same bundle is a valid
 # cnspec policy, so `cnspec scan filesystem <repo> -f repo-contract.mql.yaml`
-# runs the identical checks.
+# runs the identical checks (with an os provider that has the `agentskills`
+# resource, 14.18.2 or later).
+#
+# Skills are found by `agentskills`: every SKILL.md below the repository, at
+# any depth (skills/, plugins/*/skills/, .claude/skills/, ...), skipping .git
+# and node_modules.
 #
 # Specs enforced:
 #   - Agent Skills — https://agentskills.io/specification
@@ -15,7 +20,7 @@
 policies:
   - uid: mondoo-agent-skills-repo-contract
     name: Agent Skills repository contract
-    version: "1.0.0"
+    version: "1.1.0"
     props:
       - uid: repo
         title: Absolute path to the repository root being validated
@@ -25,22 +30,34 @@ policies:
       - title: Agent Skills spec (SKILL.md)
         filters: asset.family.contains("os")
         checks:
+          - uid: skills-present
+            title: The repository contains at least one skill (a SKILL.md file)
+            mql: |
+              agentskills(path: props.repo).skills.length > 0
+          - uid: skill-frontmatter-valid
+            title: Every SKILL.md starts with valid YAML frontmatter with correctly typed fields
+            mql: |
+              agentskills(path: props.repo).skills.all(errors.length == 0)
           - uid: skill-name-valid-slug
             title: Every skill name is a lowercase slug (a-z0-9, single hyphens)
             mql: |
-              claude.code(configPath: props.repo).skills.all(name == /^[a-z0-9]+(-[a-z0-9]+)*$/)
+              agentskills(path: props.repo).skills.all(name == /^[a-z0-9]+(-[a-z0-9]+)*$/)
           - uid: skill-name-length
             title: Every skill name is 1-64 characters
             mql: |
-              claude.code(configPath: props.repo).skills.all(name.length > 0 && name.length <= 64)
+              agentskills(path: props.repo).skills.all(name.length > 0 && name.length <= 64)
           - uid: skill-name-matches-directory
             title: Every skill name equals its directory name
             mql: |
-              claude.code(configPath: props.repo).skills.all(source.split("/")[-2] == name)
+              agentskills(path: props.repo).skills.all(name == directory)
           - uid: skill-description-length
             title: Every skill description is 1-1024 characters
             mql: |
-              claude.code(configPath: props.repo).skills.all(description.length > 0 && description.length <= 1024)
+              agentskills(path: props.repo).skills.all(description.length > 0 && description.length <= 1024)
+          - uid: skill-compatibility-length
+            title: Every skill compatibility note is at most 500 characters
+            mql: |
+              agentskills(path: props.repo).skills.all(compatibility.length <= 500)
       - title: Repository contract (agents.md + marketplace)
         filters: asset.family.contains("os")
         checks:
