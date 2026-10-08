@@ -32,36 +32,54 @@ env:
   NODE_VERSION: "24.17.0"
 
 jobs:
-  # Slack notifications are optional: they run only when the
-  # SLACK_RELEASE_CHANNEL_ID repo variable is set (with the SLACK_BOT_TOKEN
-  # secret), and a Slack failure never fails or blocks the release.
+  # Slack notifications are optional: they run only when
+  # SLACK_RELEASE_CHANNEL_ID is set, as a secret (org or repo) or a repo
+  # variable, along with the SLACK_BOT_TOKEN secret. A Slack failure never
+  # fails or blocks the release.
   notify-start:
     name: Notify release start
-    if: ${{ vars.SLACK_RELEASE_CHANNEL_ID != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
     permissions:
       contents: read
     outputs:
+      # GitHub drops an output that contains a secret, so when the channel ID
+      # comes from a secret this is empty and notify-final reads the secret.
       channel: ${{ steps.post.outputs.channel_id }}
       ts: ${{ steps.post.outputs.ts }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Secrets cannot be read in a job-level `if`, so the check is a step.
+      - name: Check Slack configuration
+        id: config
+        run: |
+          if [ -n "$SLACK_CHANNEL" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "SLACK_RELEASE_CHANNEL_ID is not set; skipping Slack notifications."
+          fi
+        env:
+          SLACK_CHANNEL: ${{ secrets.SLACK_RELEASE_CHANNEL_ID || vars.SLACK_RELEASE_CHANNEL_ID }}
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - if: ${{ steps.config.outputs.enabled == 'true' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - if: ${{ steps.config.outputs.enabled == 'true' }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Build Slack message
+        if: ${{ steps.config.outputs.enabled == 'true' }}
         run: node scripts/slack-release-message.mjs start > "$RUNNER_TEMP/slack.json"
         env:
-          SLACK_CHANNEL: ${{ vars.SLACK_RELEASE_CHANNEL_ID }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_RELEASE_CHANNEL_ID || vars.SLACK_RELEASE_CHANNEL_ID }}
           RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
           RELEASE_MODE: ${{ github.event_name == 'workflow_dispatch' && 'republish' || 'release' }}
 
       - name: Post Slack message
         id: post
+        if: ${{ steps.config.outputs.enabled == 'true' }}
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         with:
           method: chat.postMessage
@@ -192,9 +210,9 @@ jobs:
       - name: Build Slack message
         run: node scripts/slack-release-message.mjs final > "$RUNNER_TEMP/slack.json"
         env:
-          SLACK_CHANNEL: ${{ needs.notify-start.outputs.channel }}
+          SLACK_CHANNEL: ${{ needs.notify-start.outputs.channel || secrets.SLACK_RELEASE_CHANNEL_ID || vars.SLACK_RELEASE_CHANNEL_ID }}
           SLACK_TS: ${{ needs.notify-start.outputs.ts }}
-          SLACK_ALERT_GROUP: ${{ vars.SLACK_RELEASE_ALERT_GROUP_ID }}
+          SLACK_ALERT_GROUP: ${{ secrets.SLACK_RELEASE_ALERT_GROUP_ID || vars.SLACK_RELEASE_ALERT_GROUP_ID }}
           RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
           RELEASE_MODE: ${{ github.event_name == 'workflow_dispatch' && 'republish' || 'release' }}
           RESULT_BUILD: ${{ needs.release.result }}
