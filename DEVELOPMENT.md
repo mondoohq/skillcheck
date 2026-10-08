@@ -33,7 +33,9 @@ skillcheck/
 │   │   └── schemas/         # Embedded resource schema JSON
 │   ├── hasher/              # SHA-256 content hashing
 │   ├── mondoo/              # Mondoo API client (/api/v1/search/hash)
-│   └── reporter/            # CLI (colored) + JSON output
+│   ├── reporter/            # CLI (colored) + JSON output
+│   └── validate/            # `validate` subcommand: embedded MQL repo-contract policy
+│       └── policy/          #   repo-contract.mql.yaml (Agent Skills + AGENTS.md rules)
 ├── .goreleaser.yaml         # Cross-platform builds + npm publishing
 └── Makefile
 ```

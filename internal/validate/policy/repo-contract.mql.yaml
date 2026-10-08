@@ -1,0 +1,54 @@
+# Copyright Mondoo, Inc. 2026
+# SPDX-License-Identifier: Apache-2.0
+
+# Agent Skills repository contract — the rules `skillcheck validate` enforces,
+# expressed as an MQL policy so they are data, not code. skillcheck embeds this
+# bundle and runs each check's `mql` through the compiled-in MQL engine against a
+# repository path, injected as the property `repo`. The same bundle is a valid
+# cnspec policy, so `cnspec scan filesystem <repo> -f repo-contract.mql.yaml`
+# runs the identical checks.
+#
+# Specs enforced:
+#   - Agent Skills — https://agentskills.io/specification
+#   - AGENTS.md    — https://agents.md/
+
+policies:
+  - uid: mondoo-agent-skills-repo-contract
+    name: Agent Skills repository contract
+    version: "1.0.0"
+    props:
+      - uid: repo
+        title: Absolute path to the repository root being validated
+        mql: |
+          "."
+    groups:
+      - title: Agent Skills spec (SKILL.md)
+        filters: asset.family.contains("os")
+        checks:
+          - uid: skill-name-valid-slug
+            title: Every skill name is a lowercase slug (a-z0-9, single hyphens)
+            mql: |
+              claude.code(configPath: props.repo).skills.all(name == /^[a-z0-9]+(-[a-z0-9]+)*$/)
+          - uid: skill-name-length
+            title: Every skill name is 1-64 characters
+            mql: |
+              claude.code(configPath: props.repo).skills.all(name.length > 0 && name.length <= 64)
+          - uid: skill-name-matches-directory
+            title: Every skill name equals its directory name
+            mql: |
+              claude.code(configPath: props.repo).skills.all(source.split("/")[-2] == name)
+          - uid: skill-description-length
+            title: Every skill description is 1-1024 characters
+            mql: |
+              claude.code(configPath: props.repo).skills.all(description.length > 0 && description.length <= 1024)
+      - title: Repository contract (agents.md + marketplace)
+        filters: asset.family.contains("os")
+        checks:
+          - uid: agents-md-present
+            title: A root AGENTS.md exists (agents.md convention)
+            mql: |
+              file(props.repo + "/AGENTS.md").exists
+          - uid: marketplace-json-valid
+            title: .claude-plugin/marketplace.json exists and lists plugins
+            mql: |
+              parse.json(props.repo + "/.claude-plugin/marketplace.json").params["plugins"] != null

@@ -76,6 +76,39 @@ npm i -g @mondoohq/skillcheck
 
 Binaries for macOS, Linux, and Windows are also available on [GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
 
+## Validate a skills repository
+
+Beyond scanning *installed* skills for threats, skillcheck can validate a skills
+**repository** you author against the [Agent Skills](https://agentskills.io/specification)
+and [AGENTS.md](https://agents.md/) specifications — handy as a CI gate for a skills repo:
+
+```bash
+# Validate the current directory (or pass a path)
+npx @mondoohq/skillcheck validate .
+npx @mondoohq/skillcheck validate ./my-skills-repo --json
+```
+
+```text
+Validating /path/to/repo
+
+Agent Skills spec (SKILL.md)
+  ✓ Every skill name is a lowercase slug (a-z0-9, single hyphens)
+  ✓ Every skill name is 1-64 characters
+  ✓ Every skill name equals its directory name
+  ✓ Every skill description is 1-1024 characters
+Repository contract (agents.md + marketplace)
+  ✓ A root AGENTS.md exists (agents.md convention)
+  ✓ .claude-plugin/marketplace.json exists and lists plugins
+
+PASS 6 passed, 0 failed
+```
+
+The rules are an embedded [MQL](https://mondoo.com/docs/mql/home/) policy
+(`internal/validate/policy/repo-contract.mql.yaml`), run by the same compiled-in engine
+as the scan — no external policy file or cnspec install. It exits **1** if any check
+fails. Because the policy is a standard cnspec bundle, `cnspec scan filesystem <repo> -f
+repo-contract.mql.yaml` runs the identical checks.
+
 ## What Gets Checked
 
 For each detected agent, skillcheck:

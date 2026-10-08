@@ -50,6 +50,8 @@ func main() {
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
 	rootCmd.Flags().BoolVar(&verbose, "verbose", false, "Show detailed output including hashes and URLs")
 
+	rootCmd.AddCommand(newValidateCmd())
+
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("skillcheck {{ .Version }} (commit: " + commit + ", built: " + date + ")\n")
 
