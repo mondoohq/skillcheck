@@ -1,0 +1,35 @@
+{
+  "name": "@mondoohq/skillcheck",
+  "version": "0.0.0",
+  "description": "AI agent skill security scanner. Detects locally installed agent skills, computes SHA-256 checksums, and queries the Mondoo AI Agent Security database for known threats.",
+  "keywords": [
+    "ai-security",
+    "agent-skills",
+    "skillcheck",
+    "mondoo",
+    "cli",
+    "devsecops",
+    "prompt-injection",
+    "supply-chain"
+  ],
+  "homepage": "https://github.com/mondoohq/skillcheck#readme",
+  "bugs": {
+    "url": "https://github.com/mondoohq/skillcheck/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mondoohq/skillcheck.git"
+  },
+  "license": "Apache-2.0",
+  "bin": {
+    "skillcheck": "bin/skillcheck.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
