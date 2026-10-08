@@ -8,17 +8,17 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog"
-	"go.mondoo.com/mql/v13"
-	"go.mondoo.com/mql/v13/exec"
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
-	"go.mondoo.com/mql/v13/providers"
-	"go.mondoo.com/mql/v13/providers-sdk/v1/inventory"
-	pp "go.mondoo.com/mql/v13/providers-sdk/v1/plugin"
-	coreconf "go.mondoo.com/mql/v13/providers/core/config"
-	osconf "go.mondoo.com/mql/v13/providers/os/config"
-	"go.mondoo.com/mql/v13/providers/os/connection/shared"
-	osprovider "go.mondoo.com/mql/v13/providers/os/provider"
+	"go.mondoo.com/mql"
+	"go.mondoo.com/mql/exec"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
+	"go.mondoo.com/mql/providers"
+	"go.mondoo.com/mql/providers-sdk/v1/inventory"
+	pp "go.mondoo.com/mql/providers-sdk/v1/plugin"
+	coreconf "go.mondoo.com/mql/providers/core/config"
+	osconf "go.mondoo.com/mql/providers/os/config"
+	"go.mondoo.com/mql/providers/os/connection/shared"
+	osprovider "go.mondoo.com/mql/providers/os/provider"
 )
 
 //go:embed schemas/os.resources.json
