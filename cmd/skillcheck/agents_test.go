@@ -75,11 +75,6 @@ func skillsDirFor(ag agentDef, configPath string) (dir string, ok bool) {
 	case "cline", "warp":
 		// Shared ~/.agents/skills directory next to the agent's config dir.
 		return filepath.Join(filepath.Dir(configPath), ".agents", "skills"), true
-	case "openai.codex":
-		// mql reads Codex's bundled skills (skills/.system) and plugin skills,
-		// but not user-installed ones directly under <configPath>/skills: a
-		// known gap in mql's openai.codex resource. Test where it does read.
-		return filepath.Join(configPath, "skills", ".system"), true
 	case "github.copilot":
 		// Read from every user's home, independent of configPath, so a
 		// fixture under a temp configPath cannot reach it.
