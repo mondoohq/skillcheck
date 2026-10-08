@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Go 1.25+
-- Access to `go.mondoo.com/mql/v13` module
+- Access to `go.mondoo.com/mql (v14)` module
 
 ## Build
 

@@ -14,8 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.mondoo.com/mql/v13/llx"
-	"go.mondoo.com/mql/v13/mqlc"
+	"go.mondoo.com/mql/llx"
+	"go.mondoo.com/mql/mqlc"
 	"gopkg.in/yaml.v3"
 )
 
