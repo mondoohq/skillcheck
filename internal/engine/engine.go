@@ -86,7 +86,14 @@ func (e *Engine) Close() {
 
 // ExecSingle runs a single-value MQL query (e.g., "claude.code.skills").
 func (e *Engine) ExecSingle(query string) (*llx.RawData, error) {
-	result, err := exec.Exec(query, e.runtime, mql.Features{}, mqlc.EmptyPropsHandler)
+	return e.Exec(query, mqlc.EmptyPropsHandler)
+}
+
+// Exec runs a single-value MQL query with the given properties available to it
+// (referenced in MQL as props.<name>). Used by the validate policy to pass the
+// target repository path in as props.repo.
+func (e *Engine) Exec(query string, props mqlc.PropsHandler) (*llx.RawData, error) {
+	result, err := exec.Exec(query, e.runtime, mql.Features{}, props)
 	if err != nil {
 		return nil, fmt.Errorf("query %q: %w", query, err)
 	}
