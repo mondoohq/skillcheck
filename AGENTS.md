@@ -33,8 +33,8 @@ and is skipped under `go test -short`.
 
 - Every Go and YAML source file carries the Apache-2.0 copyright header
   (`copywrite headers`); CI enforces it. `**/*.json` and `**/testdata/**` are exempt.
-- Update the embedded MQL schemas with `make schemas` (copies from a local `../mql` checkout)
-  when the OS provider gains resources or fields.
+- After bumping mql in `go.mod`, regenerate the embedded MQL schemas with `make schemas`
+  (generates them from the pinned mql module); CI checks they match.
 - The `validate` policy is a standard cnspec bundle — keep it runnable by `cnspec` as well as
   by the embedded runner.
 

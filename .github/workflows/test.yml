@@ -12,6 +12,8 @@ on:
       - "npm/**"
       - "scripts/**"
       - ".github/workflows/release.yml"
+      - "internal/engine/schemas/**"
+      - "Makefile"
 
 permissions:
   contents: read
@@ -71,6 +73,20 @@ jobs:
       - run: go build ./cmd/skillcheck/
       - run: go test ./... -count=1 -short
       - run: go vet ./...
+
+  # The embedded schemas must match the providers compiled in from the pinned
+  # mql version, or queries compile against a schema the runtime doesn't have.
+  schemas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Regenerate embedded schemas
+        run: make schemas
+      - name: Check they match the committed ones
+        run: git diff --exit-code internal/engine/schemas/
 
   npm-test:
     runs-on: ubuntu-latest

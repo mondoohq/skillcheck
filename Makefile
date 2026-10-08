@@ -27,9 +27,7 @@ lint:
 clean:
 	rm -f $(PROJECT_NAME)
 
-# Update embedded MQL schema files from the local mql checkout
+# Regenerate the embedded MQL schemas from the mql version pinned in go.mod
 .PHONY: schemas
 schemas:
-	@echo "Copying schemas from ../mql ..."
-	cp ../mql/providers/os/resources/os.resources.json internal/engine/schemas/os.resources.json
-	cp ../mql/providers/core/resources/core.resources.json internal/engine/schemas/core.resources.json
+	./scripts/gen-schemas.sh
