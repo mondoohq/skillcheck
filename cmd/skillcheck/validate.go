@@ -52,8 +52,10 @@ func newValidateCmd() *cobra.Command {
 			if err := validate.Report(os.Stdout, res, jsonOutput, noColor); err != nil {
 				return err
 			}
+			// Return an error rather than os.Exit so the deferred eng.Close()
+			// runs; cobra exits non-zero and SilenceUsage keeps it terse.
 			if !res.OK() {
-				os.Exit(1)
+				return fmt.Errorf("%d of %d checks failed", res.Failed(), len(res.Checks))
 			}
 			return nil
 		},
