@@ -1,0 +1,6 @@
+{
+  "name": "fixture",
+  "plugins": [
+    { "name": "long-compat", "source": "./skills/long-compat" }
+  ]
+}
