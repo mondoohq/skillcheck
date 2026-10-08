@@ -1,6 +1,6 @@
 # skillcheck
 
-Scan your machine for malicious AI agent skills in seconds.
+Know whether the AI agent skills on your machine are safe — in seconds, with no install.
 
 ```bash
 npx @mondoohq/skillcheck
@@ -8,54 +8,29 @@ npx @mondoohq/skillcheck
 
 ![skillcheck demo](demo.gif)
 
-skillcheck detects locally installed AI agent skills, computes SHA-256 checksums, and checks them against the [Mondoo AI Agent Security](https://mondoo.com/ai-agent-security) database — covering prompt injection, credential theft, data exfiltration, and 25+ other threat categories across 1,200+ known skills.
+AI coding agents load skills, plugins, and MCP servers that run with your permissions. A
+malicious one can inject prompts, steal credentials, or exfiltrate code. skillcheck finds
+everything installed across 25 agents — Claude Code, Cursor, Codex, Gemini CLI, Copilot,
+Windsurf, and [more](https://github.com/mondoohq/skillcheck/blob/main/docs/supported-agents.md) —
+and checks it against the [Mondoo AI Agent Security](https://mondoo.com/ai-agent-security)
+database of 1,200+ analyzed skills and 25+ threat categories.
 
-## Supported Agents
+## What you can do with it
 
-| Agent | Config | Skills | What's Detected |
-|-------|--------|--------|-----------------|
-| Antigravity | `~/.gemini/antigravity/` | `~/.gemini/antigravity/skills/` | skills |
-| Augment | `~/.augment/` | `~/.augment/skills/` | skills |
-| Claude Code | `~/.claude/` | `~/.claude/skills/` | skills, plugins, MCP servers |
-| Cline | `~/.cline/` | `~/.cline/skills/` | skills |
-| Continue | `~/.continue/` | `~/.continue/skills/` | skills |
-| Cursor | `~/.cursor/` | `~/.cursor/skills/` | skills, MCP servers, rules |
-| Gemini CLI | `~/.gemini/` | `~/.gemini/skills/` | skills, MCP servers |
-| GitHub Copilot | `~/.config/github-copilot/` | `~/.config/github-copilot/skills/` | skills, MCP servers |
-| Goose | `~/.config/goose/` | `~/.config/goose/skills/` | skills, extensions |
-| IBM Bob | `~/.bob/` | `~/.bob/skills/` | skills |
-| Junie | `~/.junie/` | `~/.junie/skills/` | skills |
-| Kilo Code | `~/.kilocode/` | `~/.kilocode/skills/` | skills |
-| Kiro | `~/.kiro/` | `~/.kiro/skills/` | skills |
-| Mistral Vibe | `~/.vibe/` | `~/.vibe/skills/` | skills |
-| OpenAI Codex | `~/.codex/` | `~/.codex/skills/` | skills, plugins, MCP servers |
-| OpenClaw | `~/.openclaw/` | `~/.openclaw/skills/` | skills |
-| OpenCode | `~/.config/opencode/` | `~/.config/opencode/skills/` | skills |
-| OpenHands | `~/.openhands/` | `~/.openhands/skills/` | skills |
-| Pi | `~/.pi/agent/` | `~/.pi/agent/skills/` | skills |
-| Qwen Code | `~/.qwen/` | `~/.qwen/skills/` | skills |
-| Roo | `~/.roo/` | `~/.roo/skills/` | skills |
-| Snowflake Cortex | `~/.snowflake/cortex/` | `~/.snowflake/cortex/skills/` | skills |
-| Trae | `~/.trae/` | `~/.trae/skills/` | skills |
-| Warp | `~/.warp/` | `~/.warp/skills/` | skills |
-| Windsurf | `~/.codeium/windsurf/` | `~/.codeium/windsurf/skills/` | skills, MCP servers, rules |
+### Find out if your machine is exposed
 
-## Usage
+Run it once and get a verdict for every skill, plugin, and MCP server your agents can load:
+severity, a one-line summary of the threat, and a link to the full security report.
 
 ```bash
-# Scan all detected agents
-npx @mondoohq/skillcheck
-
-# JSON output for CI/CD pipelines
-npx @mondoohq/skillcheck --json
-
-# Verbose output with full hashes and report URLs
-npx @mondoohq/skillcheck --verbose
+npx @mondoohq/skillcheck            # scan every detected agent
+npx @mondoohq/skillcheck --verbose  # include content hashes and report URLs
 ```
 
-### CI/CD Integration
+### Stop risky skills from reaching your builds
 
-skillcheck exits with code **1** when critical or high-risk skills are found, making it easy to use as a gate:
+skillcheck exits **1** when it finds a critical or high-risk skill, so it works as a gate in
+any pipeline, dev container, or onboarding script:
 
 ```yaml
 # GitHub Actions
@@ -63,29 +38,22 @@ skillcheck exits with code **1** when critical or high-risk skills are found, ma
 ```
 
 ```bash
-# Any CI pipeline
+# Any CI system: machine-readable output, no color codes
 npx @mondoohq/skillcheck --json --no-color
 ```
 
-### Other Install Methods
+It fails open: a skill the database hasn't analyzed yet shows as clean and never blocks you.
+
+### Ship a skills repository that agents can actually load
+
+If you publish skills, `validate` checks your repository against the
+[Agent Skills](https://agentskills.io/specification) and [AGENTS.md](https://agents.md/)
+specifications — catching bad skill names, oversized descriptions, and a missing
+`AGENTS.md` or marketplace manifest before your users do.
 
 ```bash
-# Install globally via npm
-npm i -g @mondoohq/skillcheck
-```
-
-Binaries for macOS, Linux, and Windows are also available on [GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
-
-## Validate a skills repository
-
-Beyond scanning *installed* skills for threats, skillcheck can validate a skills
-**repository** you author against the [Agent Skills](https://agentskills.io/specification)
-and [AGENTS.md](https://agents.md/) specifications — handy as a CI gate for a skills repo:
-
-```bash
-# Validate the current directory (or pass a path)
-npx @mondoohq/skillcheck validate .
-npx @mondoohq/skillcheck validate ./my-skills-repo --json
+npx @mondoohq/skillcheck validate .                    # current directory
+npx @mondoohq/skillcheck validate ./my-skills --json   # any path, JSON output
 ```
 
 ```text
@@ -103,25 +71,39 @@ Repository contract (agents.md + marketplace)
 PASS 6 passed, 0 failed
 ```
 
-The rules are an embedded [MQL](https://mondoo.com/docs/mql/home/) policy
-(`internal/validate/policy/repo-contract.mql.yaml`), run by the same compiled-in engine
-as the scan — no external policy file or cnspec install. It exits **1** if any check
-fails. Because the policy is a standard cnspec bundle, `cnspec scan filesystem <repo> -f
+It exits **1** if any check fails, so it drops straight into a skills repo's CI. The rules
+are an embedded [MQL](https://mondoo.com/docs/mql/home/) policy
+([`repo-contract.mql.yaml`](https://github.com/mondoohq/skillcheck/blob/main/internal/validate/policy/repo-contract.mql.yaml)),
+and because it is a standard cnspec bundle, `cnspec scan filesystem <repo> -f
 repo-contract.mql.yaml` runs the identical checks.
 
-## What Gets Checked
+## How the scan works
 
 For each detected agent, skillcheck:
 
 1. Discovers installed skills, plugins, MCP servers, and rules
 2. Computes a SHA-256 content hash for each skill
-3. Queries the [Mondoo skill database](https://mondoo.com/ai-agent-security/skills) for known threats
+3. Looks the hash up in the [Mondoo skill database](https://mondoo.com/ai-agent-security/skills)
 4. Reports findings with severity, summary, and a link to the full security report
 
-Skills that aren't in the database yet show as clean — skillcheck fails open, never blocks your workflow.
+Only hashes are sent, never skill contents. See
+[supported agents](https://github.com/mondoohq/skillcheck/blob/main/docs/supported-agents.md)
+for where skillcheck looks for each agent.
+
+## Install
+
+`npx` always runs the latest release. To keep it installed:
+
+```bash
+npm i -g @mondoohq/skillcheck
+```
+
+Standalone binaries for macOS, Linux, and Windows are on
+[GitHub Releases](https://github.com/mondoohq/skillcheck/releases).
 
 ## Links
 
 - [Mondoo AI Agent Security](https://mondoo.com/ai-agent-security)
 - [Skill Database](https://mondoo.com/ai-agent-security/skills) — browse 1,200+ analyzed skills
 - [Security Checks](https://mondoo.com/ai-agent-security/checks) — 25+ threat categories
+- [Supported agents](https://github.com/mondoohq/skillcheck/blob/main/docs/supported-agents.md)
