@@ -80,6 +80,20 @@ If a release's npm publish failed or is incomplete, run the **Release** workflow
 that GitHub release and publishes only the packages missing from the registry; nothing is
 rebuilt and no new tag is needed.
 
+### Slack notifications
+
+When the `SLACK_RELEASE_CHANNEL_ID` repository variable is set, the release posts a Slack
+message when it starts (every stage pending) and updates it in place with the result of each
+stage when it ends. `scripts/slack-release-message.mjs` builds both messages.
+
+| Setting | Kind | Purpose |
+|---|---|---|
+| `SLACK_BOT_TOKEN` | secret | Bot token with `chat:write`; the bot must be in the channel |
+| `SLACK_RELEASE_CHANNEL_ID` | variable | Channel to post to; unset disables notifications |
+| `SLACK_RELEASE_ALERT_GROUP_ID` | variable | Optional Slack user group mentioned when a release needs attention |
+
+Notifications never block or fail a release.
+
 ### Testing the npm packaging
 
 ```bash
