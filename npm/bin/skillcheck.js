@@ -44,36 +44,78 @@ function fail(message) {
   process.exit(EXIT_FAILURE);
 }
 
+// candidateKeys lists the PLATFORM_PACKAGES keys to try, most preferred first.
+//
+// npm installs the optionalDependency matching the CPU of the Node that ran
+// `npm install`, not the machine's, so switching Node builds afterwards leaves
+// the "wrong" package on disk. Where the OS can run the other CPU's binary
+// anyway, that package is an acceptable fallback:
+//
+//   - win32: Windows on ARM64 runs both arm64 and x64 binaries (x64 under
+//     emulation), and an x64 Node there is common. arm64 <-> x64 both ways.
+//   - darwin: Apple Silicon runs x64 binaries under Rosetta, so an arm64 Node
+//     may use the x64 package. Not the reverse: an x64 Node may be on an Intel
+//     Mac, which cannot run arm64.
+//   - linux: strict. There is no general cross-CPU execution, and a binary
+//     that fails to exec is worse than a clear "not installed".
+function candidateKeys(platform, arch) {
+  const keys = [`${platform}_${arch}`];
+  if (platform === 'win32') {
+    if (arch === 'arm64') keys.push('win32_x64');
+    else if (arch === 'x64') keys.push('win32_arm64');
+  } else if (platform === 'darwin' && arch === 'arm64') {
+    keys.push('darwin_x64');
+  }
+  return keys;
+}
+
 // resolveBinary finds the platform binary, or explains why it cannot. Each
 // failure is something the user can act on, so each gets a sentence rather than
 // a module-resolution stack trace.
-function resolveBinary() {
-  const key = `${process.platform}_${process.arch}`;
-  const target = PLATFORM_PACKAGES[key];
-  if (!target) {
+//
+// platform, arch and resolve default to the real process and require.resolve;
+// tests inject them. Returns { path } on success or { error } with the message.
+function resolveBinary({ platform = process.platform, arch = process.arch, resolve = require.resolve } = {}) {
+  const targets = candidateKeys(platform, arch)
+    .map((key) => PLATFORM_PACKAGES[key])
+    .filter(Boolean);
+  if (targets.length === 0) {
     const supported = Object.keys(PLATFORM_PACKAGES).sort().join(', ');
-    fail(
-      `no prebuilt binary for ${process.platform}/${process.arch}.\n` +
+    return {
+      error:
+        `no prebuilt binary for ${platform}/${arch}.\n` +
         `  supported: ${supported}\n` +
-        '  other platforms: https://github.com/mondoohq/skillcheck/releases'
-    );
+        '  other platforms: https://github.com/mondoohq/skillcheck/releases',
+    };
   }
-  let pkgJson;
-  try {
-    pkgJson = require.resolve(path.posix.join(target.pkg, 'package.json'));
-  } catch {
-    fail(
-      `the platform package ${target.pkg} is not installed.\n` +
-        '  it ships as an optionalDependency, so this usually means the install ran with\n' +
-        '  --no-optional / --omit=optional, or a lockfile from a different platform was used.\n' +
-        `  fix: npm install ${target.pkg}`
-    );
+  for (const target of targets) {
+    let pkgJson;
+    try {
+      pkgJson = resolve(path.posix.join(target.pkg, 'package.json'));
+    } catch {
+      continue;
+    }
+    return { path: path.join(path.dirname(pkgJson), target.bin) };
   }
-  return path.join(path.dirname(pkgJson), target.bin);
+  const preferred = targets[0].pkg;
+  const fallbacks = targets.slice(1).map((t) => t.pkg);
+  const which =
+    `the platform package ${preferred} is not installed` +
+    (fallbacks.length ? `, and neither is the fallback ${fallbacks.join(', ')}.` : '.');
+  return {
+    error:
+      `${which}\n` +
+      '  it ships as an optionalDependency, so this usually means the install ran with\n' +
+      '  --no-optional / --omit=optional, or a lockfile from a different platform was used,\n' +
+      `  or node_modules was installed by a Node build for a different CPU than this one (${arch}).\n` +
+      `  fix: npm install ${preferred}`,
+  };
 }
 
 function main() {
-  const child = spawn(resolveBinary(), process.argv.slice(2), {
+  const resolved = resolveBinary();
+  if (resolved.error) fail(resolved.error);
+  const child = spawn(resolved.path, process.argv.slice(2), {
     stdio: 'inherit',
     env: process.env,
   });
@@ -109,4 +151,10 @@ function main() {
   });
 }
 
-main();
+// Run when executed as the `skillcheck` bin; export the resolution logic when
+// required, so scripts/npm-launcher.test.mjs can test it without spawning.
+if (require.main === module) {
+  main();
+} else {
+  module.exports = { PLATFORM_PACKAGES, candidateKeys, resolveBinary };
+}
