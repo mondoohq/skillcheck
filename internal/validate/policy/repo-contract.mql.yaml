@@ -1,71 +1,110 @@
 # Copyright Mondoo, Inc. 2026
 # SPDX-License-Identifier: Apache-2.0
 
-# Agent Skills repository contract — the rules `skillcheck validate` enforces,
-# expressed as an MQL policy so they are data, not code. skillcheck embeds this
-# bundle and runs each check's `mql` through the compiled-in MQL engine against a
-# repository path, injected as the property `repo`. The same bundle is a valid
-# cnspec policy, so `cnspec scan filesystem <repo> -f repo-contract.mql.yaml`
-# runs the identical checks (with an os provider that has the `agentskills`
-# resource, 14.18.2 or later).
+# Agent Skills rules — what `skillcheck validate` enforces on a repository and
+# what the scan checks on every installed skill, expressed as MQL policies so
+# they are data, not code. skillcheck embeds this bundle and runs each check's
+# `mql` through the compiled-in MQL engine against a path, injected as the
+# property `repo`. The same bundle is a valid cnspec policy bundle, so
+# `cnspec scan filesystem <repo> -f repo-contract.mql.yaml` runs the identical
+# checks (with an os provider that has the `agentskills` resource, 14.18.2 or
+# later).
 #
-# Skills are found by `agentskills`: every SKILL.md below the repository, at
-# any depth (skills/, plugins/*/skills/, .claude/skills/, ...), skipping .git
-# and node_modules.
+# Two policies:
+#   - mondoo-agent-skills-spec: the specification, per skill. The scan runs
+#     only this one, against each installed skill's directory.
+#   - mondoo-agent-skills-repo-contract: what a skills repository must also
+#     ship. `validate` runs both.
+#
+# Each check's `impact` sets its severity, as in cnspec: 90+ critical, 70+
+# high, 40+ medium, below that low. A failing low check is a warning: shown,
+# but it does not fail `validate`.
+#
+# Skills are found by `agentskills`: every SKILL.md below the path, at any
+# depth (skills/, plugins/*/skills/, .claude/skills/, ...), and the skills in
+# .skill packages, skipping .git and node_modules.
 #
 # Specs enforced:
 #   - Agent Skills — https://agentskills.io/specification
 #   - AGENTS.md    — https://agents.md/
 
 policies:
-  - uid: mondoo-agent-skills-repo-contract
-    name: Agent Skills repository contract
-    version: "1.1.0"
+  - uid: mondoo-agent-skills-spec
+    name: Agent Skills specification
+    version: "1.0.0"
     props:
       - uid: repo
-        title: Absolute path to the repository root being validated
+        title: Absolute path to the skill, or the directory of skills, being checked
         mql: |
           "."
     groups:
       - title: Agent Skills spec (SKILL.md)
         filters: asset.family.contains("os")
         checks:
-          - uid: skills-present
-            title: The repository contains at least one skill (a SKILL.md file)
-            mql: |
-              agentskills(path: props.repo).skills.length > 0
           - uid: skill-frontmatter-valid
-            title: Every SKILL.md starts with valid YAML frontmatter with correctly typed fields
+            title: Every skill can be read, with valid YAML frontmatter and correctly typed fields
+            impact: 80
             mql: |
               agentskills(path: props.repo).skills.all(errors.length == 0)
           - uid: skill-name-valid-slug
             title: Every skill name is a lowercase slug (a-z0-9, single hyphens)
+            impact: 70
             mql: |
               agentskills(path: props.repo).skills.all(name == /^[a-z0-9]+(-[a-z0-9]+)*$/)
           - uid: skill-name-length
             title: Every skill name is 1-64 characters
+            impact: 70
             mql: |
               agentskills(path: props.repo).skills.all(name.length > 0 && name.length <= 64)
-          - uid: skill-name-matches-directory
-            title: Every skill name equals its directory name
-            mql: |
-              agentskills(path: props.repo).skills.all(name == directory)
           - uid: skill-description-length
             title: Every skill description is 1-1024 characters
+            impact: 70
             mql: |
               agentskills(path: props.repo).skills.all(description.length > 0 && description.length <= 1024)
+          - uid: skill-references-exist
+            title: Every file a skill refers to is bundled with it
+            impact: 60
+            mql: |
+              agentskills(path: props.repo).skills.all(missingReferences.length == 0)
+          - uid: skill-name-matches-directory
+            title: Every skill name equals its directory name
+            impact: 40
+            mql: |
+              agentskills(path: props.repo).skills.all(name == directory)
           - uid: skill-compatibility-length
             title: Every skill compatibility note is at most 500 characters
+            impact: 40
             mql: |
               agentskills(path: props.repo).skills.all(compatibility.length <= 500)
-      - title: Repository contract (agents.md + marketplace)
+          - uid: skill-body-size
+            title: Every SKILL.md body is at most 500 lines (move detail into referenced files)
+            impact: 30
+            mql: |
+              agentskills(path: props.repo).skills.all(lines <= 500)
+  - uid: mondoo-agent-skills-repo-contract
+    name: Agent Skills repository contract
+    version: "2.0.0"
+    props:
+      - uid: repo
+        title: Absolute path to the repository root being validated
+        mql: |
+          "."
+    groups:
+      - title: Repository contract (skills, agents.md, marketplace)
         filters: asset.family.contains("os")
         checks:
+          - uid: skills-present
+            title: The repository contains at least one skill (a SKILL.md file or .skill package)
+            impact: 70
+            mql: |
+              agentskills(path: props.repo).skills.length > 0
           - uid: agents-md-present
             title: A root AGENTS.md exists (agents.md convention)
+            impact: 50
             mql: |
               file(props.repo + "/AGENTS.md").exists
           - uid: marketplace-json-valid
             title: .claude-plugin/marketplace.json exists and lists plugins
+            impact: 50
             mql: |
               parse.json(props.repo + "/.claude-plugin/marketplace.json").params["plugins"] != null

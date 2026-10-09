@@ -4,6 +4,8 @@
 package validate_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"os"
 	"path/filepath"
 	"sort"
@@ -60,6 +62,26 @@ func writeFile(t *testing.T, repo, rel, content string) {
 	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// writeZip writes a zip archive of name -> content to repo/rel.
+func writeZip(t *testing.T, repo, rel string, entries map[string]string) {
+	t.Helper()
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for name, content := range entries {
+		w, err := zw.Create(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.Write([]byte(content)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, repo, rel, buf.String())
 }
 
 // skillMD renders a SKILL.md with the given frontmatter lines.
@@ -154,6 +176,45 @@ func TestEachCheckCanFail(t *testing.T) {
 		{"compatibility at 500 characters", func(t *testing.T, repo string) {
 			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d", "compatibility: "+long(500)))
 		}, nil},
+		{"link to a file the skill does not bundle", func(t *testing.T, repo string) {
+			// An install that copies SKILL.md alone leaves its images behind.
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"![home](screens/home.png)\n")
+		}, []string{"skill-references-exist"}},
+		{"path mentioned in prose is not a reference", func(t *testing.T, repo string) {
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"For example `scripts/rotate.py`.\n")
+		}, nil},
+		{"reference to a bundled file", func(t *testing.T, repo string) {
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"See [the guide](references/GUIDE.md).\n")
+			writeFile(t, repo, "skills/ok-skill/references/GUIDE.md", "# Guide\n")
+		}, nil},
+		{"link to a sibling skill", func(t *testing.T, repo string) {
+			// Skills in a plugin link to each other; that resolves.
+			writeFile(t, repo, "skills/other-skill/SKILL.md", skillMD("name: other-skill", "description: d"))
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"See [other](../other-skill/SKILL.md).\n")
+		}, nil},
+		{"link to a sibling skill that does not exist", func(t *testing.T, repo string) {
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"See [other](../gone/references/api.md).\n")
+		}, []string{"skill-references-exist"}},
+		{"body over 500 lines", func(t *testing.T, repo string) {
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", "---\nname: ok-skill\ndescription: d\n---\n"+strings.Repeat("line\n", 501))
+		}, []string{"skill-body-size"}},
+		{"body at 500 lines", func(t *testing.T, repo string) {
+			writeFile(t, repo, "skills/ok-skill/SKILL.md", "---\nname: ok-skill\ndescription: d\n---\n"+strings.Repeat("line\n", 500))
+		}, nil},
+		{"skill package with a valid skill", func(t *testing.T, repo string) {
+			writeZip(t, repo, "dist/pkg-skill.skill", map[string]string{
+				"pkg-skill/SKILL.md":      skillMD("name: pkg-skill", "description: d") + "Run [go](scripts/go.sh).\n",
+				"pkg-skill/scripts/go.sh": "#!/bin/sh\n",
+			})
+		}, nil},
+		{"skill package with a bad name is found", func(t *testing.T, repo string) {
+			writeZip(t, repo, "dist/pkg.skill", map[string]string{
+				"Pkg/SKILL.md": skillMD("name: Pkg", "description: d"),
+			})
+		}, []string{"skill-name-valid-slug"}},
+		{"skill package that is not a zip", func(t *testing.T, repo string) {
+			writeFile(t, repo, "dist/broken.skill", "not a zip")
+		}, unreadableSkill},
 		{"broken skill nested in a plugin is found", func(t *testing.T, repo string) {
 			writeFile(t, repo, "plugins/p/skills/nested/SKILL.md", skillMD("name: not-nested", "description: d"))
 		}, []string{"skill-name-matches-directory"}},
@@ -205,6 +266,74 @@ func TestEachCheckCanFail(t *testing.T) {
 	}
 }
 
+// A low-severity failure is reported as a warning and does not fail the
+// result; any other failure does.
+func TestWarningsDoNotFail(t *testing.T) {
+	eng, err := engine.New()
+	if err != nil {
+		t.Fatalf("engine.New: %v", err)
+	}
+	t.Cleanup(func() { eng.Close() })
+
+	repo := conformantRepo(t)
+	writeFile(t, repo, "skills/ok-skill/SKILL.md", "---\nname: ok-skill\ndescription: d\n---\n"+strings.Repeat("line\n", 501))
+	res, err := validate.Run(eng, repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.OK() || res.Warnings() != 1 || res.Failed() != 0 {
+		t.Fatalf("OK=%v warnings=%d failed=%d, want a single warning that does not fail", res.OK(), res.Warnings(), res.Failed())
+	}
+
+	// A new repository: the engine caches resources by path.
+	repo = conformantRepo(t)
+	writeFile(t, repo, "skills/ok-skill/SKILL.md", skillMD("name: ok-skill", "description: d")+"Read [the design](references/DESIGN.md).\n")
+	res, err = validate.Run(eng, repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OK() || res.Warnings() != 0 || res.Failed() != 1 {
+		t.Fatalf("OK=%v warnings=%d failed=%d, want a medium failure that fails", res.OK(), res.Warnings(), res.Failed())
+	}
+}
+
+func TestSeverity(t *testing.T) {
+	for impact, want := range map[int]string{100: "critical", 90: "critical", 89: "high", 70: "high", 69: "medium", 40: "medium", 39: "low", 0: "low"} {
+		if got := validate.Severity(impact); got != want {
+			t.Errorf("Severity(%d) = %q, want %q", impact, got, want)
+		}
+	}
+}
+
+// The scan runs only the spec policy against an installed skill, which has no
+// AGENTS.md or marketplace manifest of its own.
+func TestRunSelectsPolicies(t *testing.T) {
+	eng, err := engine.New()
+	if err != nil {
+		t.Fatalf("engine.New: %v", err)
+	}
+	t.Cleanup(func() { eng.Close() })
+
+	skill := filepath.Join(conformantRepo(t), "skills", "ok-skill")
+	res, err := validate.Run(eng, skill, validate.SpecPolicy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Checks) == 0 {
+		t.Fatal("no checks ran")
+	}
+	for _, c := range res.Checks {
+		if c.Policy != validate.SpecPolicy {
+			t.Errorf("check %s from policy %s ran", c.UID, c.Policy)
+		}
+	}
+	assertFailedExactly(t, res)
+
+	if _, err := validate.Run(eng, skill, "no-such-policy"); err == nil {
+		t.Fatal("unknown policy: want an error")
+	}
+}
+
 func TestRun(t *testing.T) {
 	eng, err := engine.New()
 	if err != nil {
@@ -223,7 +352,15 @@ func TestRun(t *testing.T) {
 
 	t.Run("conformant repo passes every check", func(t *testing.T) {
 		// Includes a skill nested under plugins/, which must be found and pass.
-		assertFailedExactly(t, run(t, "testdata/good"))
+		res := run(t, "testdata/good")
+		assertFailedExactly(t, res)
+		// Severity comes from the policy: a check without an impact would
+		// silently be a warning.
+		for _, c := range res.Checks {
+			if c.Impact <= 0 {
+				t.Errorf("check %s declares no impact", c.UID)
+			}
+		}
 	})
 
 	t.Run("non-conformant repo fails the right checks", func(t *testing.T) {
