@@ -29,6 +29,19 @@ type SkillResult struct {
 	Summary     string  `json:"summary,omitempty"`
 	PURL        string  `json:"purl,omitempty"`
 	URL         string  `json:"url"`
+	// Spec lists the Agent Skills specification checks the skill fails. They
+	// are reported but never decide the exit code, which stays on the risk
+	// database alone.
+	Spec []SpecFinding `json:"spec,omitempty"`
+}
+
+// SpecFinding is one Agent Skills specification check a skill fails.
+type SpecFinding struct {
+	UID      string `json:"uid"`
+	Title    string `json:"title"`
+	Severity string `json:"severity"`
+	// Warning marks a low-severity finding, such as a long body.
+	Warning bool `json:"warning,omitempty"`
 }
 
 // PluginResult holds a single plugin's info.
@@ -94,4 +107,18 @@ func (r *ScanResult) TotalMCPServers() int {
 // Reporter writes scan results to output.
 type Reporter interface {
 	Report(result *ScanResult) error
+}
+
+// SkillsWithSpecFindings returns the number of skills that fail at least one
+// specification check.
+func (r *ScanResult) SkillsWithSpecFindings() int {
+	n := 0
+	for _, agent := range r.Agents {
+		for _, skill := range agent.Skills {
+			if len(skill.Spec) > 0 {
+				n++
+			}
+		}
+	}
+	return n
 }
