@@ -22,7 +22,6 @@ type CLIReporter struct {
 }
 
 func (r *CLIReporter) Report(result *ScanResult) error {
-	r.styles = ui.NewStyles(r.Writer, r.NoColor)
 	if len(result.Agents) == 0 {
 		fmt.Fprintln(r.Writer, "No AI agents detected.")
 		return nil
@@ -122,10 +121,10 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 }
 
 func (r *CLIReporter) colorize(text, style string) string {
-	st := r.styles
-	if st == nil {
-		st = ui.NewStyles(r.Writer, r.NoColor)
+	if r.styles == nil {
+		r.styles = ui.NewStyles(r.Writer, r.NoColor)
 	}
+	st := r.styles
 	switch style {
 	case "red":
 		return st.Bad.Render(text)

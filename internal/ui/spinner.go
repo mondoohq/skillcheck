@@ -38,21 +38,29 @@ func (s *Spinner) Start(msg string) {
 		return
 	}
 	s.mu.Lock()
+	if s.stop != nil {
+		s.msg = msg
+		s.mu.Unlock()
+		return
+	}
 	s.msg = msg
-	s.stop = make(chan struct{})
-	s.done = make(chan struct{})
+	stop, done := make(chan struct{}), make(chan struct{})
+	s.stop, s.done = stop, done
 	s.mu.Unlock()
 
 	go func() {
-		defer close(s.done)
+		defer close(done)
 		t := time.NewTicker(80 * time.Millisecond)
 		defer t.Stop()
 		for i := 0; ; i++ {
+			// Write outside the lock, so a slow terminal cannot block
+			// Update or Stop.
 			s.mu.Lock()
-			fmt.Fprintf(s.w, "\r\033[K%s %s", s.style.Accent.Render(spinnerFrames[i%len(spinnerFrames)]), s.msg)
+			msg := s.msg
 			s.mu.Unlock()
+			fmt.Fprintf(s.w, "\r\033[K%s %s", s.style.Accent.Render(spinnerFrames[i%len(spinnerFrames)]), msg)
 			select {
-			case <-s.stop:
+			case <-stop:
 				fmt.Fprint(s.w, "\r\033[K")
 				return
 			case <-t.C:
@@ -71,12 +79,19 @@ func (s *Spinner) Update(msg string) {
 	s.mu.Unlock()
 }
 
-// Stop clears the spinner line. It is safe to call without Start.
+// Stop clears the spinner line and waits for it to stop drawing. It is safe
+// to call without Start, and more than once.
 func (s *Spinner) Stop() {
-	if !s.enabled || s.stop == nil {
+	if !s.enabled {
 		return
 	}
-	close(s.stop)
-	<-s.done
-	s.stop = nil
+	s.mu.Lock()
+	stop, done := s.stop, s.done
+	s.stop, s.done = nil, nil
+	s.mu.Unlock()
+	if stop == nil {
+		return
+	}
+	close(stop)
+	<-done
 }
