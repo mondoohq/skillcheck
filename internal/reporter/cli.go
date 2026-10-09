@@ -125,7 +125,11 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 			if rule.Hash != "" {
 				hashSuffix = " " + r.colorize(rule.Hash[:12], "dim")
 			}
-			fmt.Fprintf(r.Writer, "    → %s%s\n", rule.Name, hashSuffix)
+			agent := ""
+			if rule.Agent != "" {
+				agent = " " + r.colorize("("+rule.Agent+")", "dim")
+			}
+			fmt.Fprintf(r.Writer, "    → %s%s%s\n", rule.Name, agent, hashSuffix)
 		}
 	}
 

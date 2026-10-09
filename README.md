@@ -27,6 +27,14 @@ npx @mondoohq/skillcheck            # scan every detected agent
 npx @mondoohq/skillcheck --verbose  # include content hashes and report URLs
 ```
 
+Agents also load skills and instructions from the project you open. Add `--project` to scan
+a checkout too: its skills (including `.skill` packages) and the instruction files agents
+read there, such as `AGENTS.md`, `CLAUDE.md`, `.cursor/rules` and Copilot instructions.
+
+```bash
+npx @mondoohq/skillcheck --project .
+```
+
 ### Stop risky skills from reaching your builds
 
 skillcheck exits **1** when it finds a critical or high-risk skill, so it works as a gate in

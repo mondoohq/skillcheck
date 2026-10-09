@@ -32,6 +32,7 @@ func main() {
 	var jsonOutput bool
 	var noColor bool
 	var verbose bool
+	var project string
 
 	rootCmd := &cobra.Command{
 		Use:   "skillcheck",
@@ -43,7 +44,7 @@ func main() {
 				noColor = true
 			}
 
-			return runScan(jsonOutput, noColor, verbose)
+			return runScan(jsonOutput, noColor, verbose, project)
 		},
 		SilenceUsage: true,
 	}
@@ -51,6 +52,7 @@ func main() {
 	rootCmd.Flags().BoolVar(&jsonOutput, "json", false, "Output results as JSON")
 	rootCmd.Flags().BoolVar(&noColor, "no-color", false, "Disable colored output")
 	rootCmd.Flags().BoolVar(&verbose, "verbose", false, "Show detailed output including hashes and URLs")
+	rootCmd.Flags().StringVar(&project, "project", "", "Also scan a project directory: its skills (including .skill packages) and agent instruction files such as AGENTS.md and CLAUDE.md")
 
 	rootCmd.AddCommand(newValidateCmd())
 
@@ -254,7 +256,7 @@ func buildQuery(resource, configPath, field string) string {
 	return fmt.Sprintf(`%s(configPath: %q).%s`, resource, configPath, field)
 }
 
-func runScan(jsonOutput, noColor, verbose bool) error {
+func runScan(jsonOutput, noColor, verbose bool, project string) error {
 	if !jsonOutput {
 		fmt.Println(colorLogo(noColor))
 		fmt.Println()
@@ -292,33 +294,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 					if skill == nil {
 						continue
 					}
-					name := getString(skill, "name")
-					content := getString(skill, "content")
-					hash := ""
-					if content != "" {
-						hash = hasher.Content(content)
-					}
-					sr := reporter.SkillResult{
-						Name:   name,
-						Hash:   hash,
-						Source: getString(skill, "source"),
-						Status: "unknown",
-						URL:    client.SkillURL(name),
-					}
-					sr.Spec = specs.findings(sr.Source)
-					if hash != "" {
-						if resp, _ := client.SearchByHash(hash); resp != nil && len(resp.Reports) > 0 {
-							report := resp.Reports[0]
-							sr.Status = report.Status
-							sr.RiskScore = report.RiskScore
-							sr.TopSeverity = report.TopSeverity
-							sr.Summary = report.Summary
-							sr.PURL = report.PURL
-							if u := client.ReportURL(&report); u != "" {
-								sr.URL = u
-							}
-						}
-					}
+					sr := checkSkill(client, specs, getString(skill, "name"), getString(skill, "content"), getString(skill, "source"), "")
 					agentResult.Skills = append(agentResult.Skills, sr)
 				}
 
@@ -391,6 +367,17 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 		}
 	}
 
+	if project != "" {
+		spin.Update("Scanning project " + project)
+		pr, err := scanProject(eng, client, specs, project)
+		if err != nil {
+			spin.Stop()
+			return err
+		}
+		if len(pr.Skills) > 0 || len(pr.Rules) > 0 {
+			result.Agents = append(result.Agents, *pr)
+		}
+	}
 	spin.Stop()
 
 	var rep reporter.Reporter
@@ -414,6 +401,86 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 	return nil
 }
 
+// checkSkill hashes a skill, looks the hash up in the risk database, and runs
+// the specification checks. archive is the .skill package the skill was read
+// from, if any. Like the rest of the scan it fails open: a skill the database
+// does not know stays "unknown", which never fails the scan.
+func checkSkill(client *mondoo.Client, specs *specChecker, name, content, source, archive string) reporter.SkillResult {
+	hash := ""
+	if content != "" {
+		hash = hasher.Content(content)
+	}
+	sr := reporter.SkillResult{
+		Name:   name,
+		Hash:   hash,
+		Source: source,
+		Status: "unknown",
+		URL:    client.SkillURL(name),
+	}
+	if archive != "" {
+		sr.Spec = specs.findingsFor(archive)
+	} else {
+		sr.Spec = specs.findings(source)
+	}
+	if hash != "" {
+		if resp, _ := client.SearchByHash(hash); resp != nil && len(resp.Reports) > 0 {
+			report := resp.Reports[0]
+			sr.Status = report.Status
+			sr.RiskScore = report.RiskScore
+			sr.TopSeverity = report.TopSeverity
+			sr.Summary = report.Summary
+			sr.PURL = report.PURL
+			if u := client.ReportURL(&report); u != "" {
+				sr.URL = u
+			}
+		}
+	}
+	return sr
+}
+
+// scanProject scans a project directory: every skill in it, including those in
+// .skill packages, and the agent instruction files (AGENTS.md, CLAUDE.md,
+// .cursor/rules, ...) that agents load when they work in it.
+func scanProject(eng *engine.Engine, client *mondoo.Client, specs *specChecker, dir string) (*reporter.AgentResult, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, fmt.Errorf("resolve project path: %w", err)
+	}
+	if fi, err := os.Stat(abs); err != nil || !fi.IsDir() {
+		return nil, fmt.Errorf("project %s is not a directory", dir)
+	}
+	pr := &reporter.AgentResult{Platform: "Project", ConfigPath: abs}
+
+	for _, s := range queryResourceList(eng, fmt.Sprintf(`agentskills(path: %q).skills { name content path archive }`, abs)) {
+		skill := extractMap(s)
+		if skill == nil {
+			continue
+		}
+		pr.Skills = append(pr.Skills, checkSkill(client, specs,
+			getString(skill, "name"), getString(skill, "content"), getString(skill, "path"), getString(skill, "archive")))
+	}
+
+	for _, f := range queryResourceList(eng, fmt.Sprintf(`agentinstructions(path: %q).files { path agent content }`, abs)) {
+		file := extractMap(f)
+		if file == nil {
+			continue
+		}
+		path := getString(file, "path")
+		name := path
+		if rel, err := filepath.Rel(abs, path); err == nil {
+			name = rel
+		}
+		hash := ""
+		if content := getString(file, "content"); content != "" {
+			hash = hasher.Content(content)
+		}
+		pr.Rules = append(pr.Rules, reporter.RuleResult{
+			Name: name, Source: path, Hash: hash, Agent: getString(file, "agent"),
+		})
+	}
+	return pr, nil
+}
+
 // specChecker runs the embedded Agent Skills specification policy against
 // installed skills. Agents can share a skills directory (cline and warp read
 // ~/.agents/skills), so results are cached per skill directory.
@@ -433,12 +500,17 @@ func (c *specChecker) findings(source string) []reporter.SpecFinding {
 	if filepath.Base(source) != "SKILL.md" {
 		return nil
 	}
-	dir := filepath.Dir(source)
-	if f, ok := c.cache[dir]; ok {
+	return c.findingsFor(filepath.Dir(source))
+}
+
+// findingsFor returns the specification checks the skills at path fail: a
+// skill directory, or a .skill package.
+func (c *specChecker) findingsFor(path string) []reporter.SpecFinding {
+	if f, ok := c.cache[path]; ok {
 		return f
 	}
 	var out []reporter.SpecFinding
-	if res, err := validate.Run(c.eng, dir, validate.SpecPolicy); err == nil {
+	if res, err := validate.Run(c.eng, path, validate.SpecPolicy); err == nil {
 		for _, chk := range res.Checks {
 			if chk.Pass {
 				continue
@@ -448,7 +520,7 @@ func (c *specChecker) findings(source string) []reporter.SpecFinding {
 			})
 		}
 	}
-	c.cache[dir] = out
+	c.cache[path] = out
 	return out
 }
 
