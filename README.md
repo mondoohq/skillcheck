@@ -94,6 +94,10 @@ For each detected agent, skillcheck:
 2. Computes a SHA-256 content hash for each skill
 3. Looks the hash up in the [Mondoo skill database](https://mondoo.com/ai-agent-security/skills)
 4. Reports findings with severity, summary, and a link to the full security report
+5. Checks each skill against the [Agent Skills specification](https://agentskills.io/specification),
+   with the same rules as `validate`, and lists what it fails under the skill — such as a
+   name that isn't a valid slug, or images and references an installer didn't copy. These
+   are shown but never change the exit code: a malformed skill is not a malicious one.
 
 Only hashes are sent, never skill contents. See
 [supported agents](https://github.com/mondoohq/skillcheck/blob/main/docs/supported-agents.md)

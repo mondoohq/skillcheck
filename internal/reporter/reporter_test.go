@@ -40,3 +40,18 @@ func TestHasCriticalOrHigh(t *testing.T) {
 		})
 	}
 }
+
+// Spec findings are reported, but the exit code stays on the risk database:
+// a malformed skill is not a malicious one, and the scan fails open.
+func TestSpecFindingsDoNotFailTheScan(t *testing.T) {
+	r := &ScanResult{Agents: []AgentResult{{Platform: "a", Skills: []SkillResult{{
+		Name: "s",
+		Spec: []SpecFinding{{UID: "skill-frontmatter-valid", Severity: "high"}},
+	}}}}}
+	if r.HasCriticalOrHigh() {
+		t.Fatal("a high-severity spec finding failed the scan")
+	}
+	if got := r.SkillsWithSpecFindings(); got != 1 {
+		t.Fatalf("SkillsWithSpecFindings() = %d, want 1", got)
+	}
+}

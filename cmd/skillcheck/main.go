@@ -14,6 +14,7 @@ import (
 	"go.mondoo.com/skillcheck/internal/mondoo"
 	"go.mondoo.com/skillcheck/internal/reporter"
 	"go.mondoo.com/skillcheck/internal/ui"
+	"go.mondoo.com/skillcheck/internal/validate"
 )
 
 var (
@@ -273,6 +274,8 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 		return fmt.Errorf("failed to determine home directory: %w", err)
 	}
 
+	specs := newSpecChecker(eng)
+
 	// Progress goes to stderr, and only to a terminal, so stdout stays the report.
 	spin := ui.NewSpinner(os.Stderr, !jsonOutput)
 	spin.Start("Scanning")
@@ -302,6 +305,7 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 						Status: "unknown",
 						URL:    client.SkillURL(name),
 					}
+					sr.Spec = specs.findings(sr.Source)
 					if hash != "" {
 						if resp, _ := client.SearchByHash(hash); resp != nil && len(resp.Reports) > 0 {
 							report := resp.Reports[0]
@@ -408,6 +412,44 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 		os.Exit(1)
 	}
 	return nil
+}
+
+// specChecker runs the embedded Agent Skills specification policy against
+// installed skills. Agents can share a skills directory (cline and warp read
+// ~/.agents/skills), so results are cached per skill directory.
+type specChecker struct {
+	eng   validate.Execer
+	cache map[string][]reporter.SpecFinding
+}
+
+func newSpecChecker(eng validate.Execer) *specChecker {
+	return &specChecker{eng: eng, cache: map[string][]reporter.SpecFinding{}}
+}
+
+// findings returns the specification checks the skill whose SKILL.md is at
+// source fails. Like the rest of the scan it fails open: a source that is not
+// a SKILL.md, or a policy that cannot run, yields no findings.
+func (c *specChecker) findings(source string) []reporter.SpecFinding {
+	if filepath.Base(source) != "SKILL.md" {
+		return nil
+	}
+	dir := filepath.Dir(source)
+	if f, ok := c.cache[dir]; ok {
+		return f
+	}
+	var out []reporter.SpecFinding
+	if res, err := validate.Run(c.eng, dir, validate.SpecPolicy); err == nil {
+		for _, chk := range res.Checks {
+			if chk.Pass {
+				continue
+			}
+			out = append(out, reporter.SpecFinding{
+				UID: chk.UID, Title: chk.Title, Severity: chk.Severity, Warning: chk.Warning,
+			})
+		}
+	}
+	c.cache[dir] = out
+	return out
 }
 
 // queryResourceList executes an MQL query that returns a list of resources

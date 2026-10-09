@@ -37,6 +37,10 @@ func (r *CLIReporter) Report(result *ScanResult) error {
 	fmt.Fprintln(r.Writer, strings.Repeat("─", 60))
 	fmt.Fprintf(r.Writer, "Summary: %d skill(s), %d plugin(s), %d MCP server(s)\n",
 		result.TotalSkills(), result.TotalPlugins(), result.TotalMCPServers())
+	if n := result.SkillsWithSpecFindings(); n > 0 {
+		fmt.Fprintf(r.Writer, "%s %d skill(s) do not follow the Agent Skills specification (https://agentskills.io/specification)\n",
+			r.colorize("!", "yellow"), n)
+	}
 
 	if result.HasCriticalOrHigh() {
 		fmt.Fprintln(r.Writer, r.colorize("FAIL", "red")+" — critical or high-risk findings detected")
@@ -72,6 +76,14 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 				}
 			} else if r.Verbose && skill.URL != "" {
 				fmt.Fprintf(r.Writer, "      %s\n", r.colorize(skill.URL, "dim"))
+			}
+			for _, f := range skill.Spec {
+				label := f.Severity
+				if f.Warning {
+					label = "warning"
+				}
+				fmt.Fprintf(r.Writer, "      %s %s %s\n",
+					r.colorize("spec", "yellow"), f.Title, r.colorize("("+label+")", "dim"))
 			}
 		}
 	}

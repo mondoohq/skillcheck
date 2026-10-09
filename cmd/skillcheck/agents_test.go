@@ -132,3 +132,49 @@ func TestAgentSkillsAreFound(t *testing.T) {
 		})
 	}
 }
+
+// TestSpecFindingsOnInstalledSkills plants a skill the way a generator that
+// copies only SKILL.md would install it: an invalid name and an image that
+// was left behind. The scan's spec check must report both on the skill the
+// agent query finds.
+func TestSpecFindingsOnInstalledSkills(t *testing.T) {
+	eng := newEngine(t)
+	configPath := filepath.Join(t.TempDir(), ".claude")
+	skillFile := filepath.Join(configPath, "skills", "acme-design", "SKILL.md")
+	if err := os.MkdirAll(filepath.Dir(skillFile), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	content := "---\nname: Acme-design\ndescription: Design system.\n---\n![home](screens/home.png)\n"
+	if err := os.WriteFile(skillFile, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	skills := queryResourceList(eng, buildQuery("claude.code", configPath, "skills { name description content source }"))
+	if len(skills) != 1 {
+		t.Fatalf("got %d skills, want 1", len(skills))
+	}
+	source := getString(extractMap(skills[0]), "source")
+
+	specs := newSpecChecker(eng)
+	got := map[string]string{}
+	for _, f := range specs.findings(source) {
+		got[f.UID] = f.Severity
+	}
+	want := map[string]string{
+		"skill-name-valid-slug":        "high",
+		"skill-name-matches-directory": "medium",
+		"skill-references-exist":       "medium",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("findings = %v, want %v", got, want)
+	}
+	for uid, sev := range want {
+		if got[uid] != sev {
+			t.Errorf("finding %s = %q, want %q (all: %v)", uid, got[uid], sev, got)
+		}
+	}
+
+	if f := specs.findings(filepath.Join(configPath, "rules", "x.md")); f != nil {
+		t.Errorf("a source that is not a SKILL.md has findings: %v", f)
+	}
+}
