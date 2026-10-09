@@ -30,10 +30,13 @@ func Report(w io.Writer, res Result, jsonOut, noColor bool) error {
 			group = chk.Group
 			fmt.Fprintf(w, "%s\n", st.Dim.Render(group))
 		}
-		if chk.Pass {
+		switch {
+		case chk.Pass:
 			fmt.Fprintf(w, "  %s %s\n", st.OK.Render("✓"), chk.Title)
-		} else {
-			fmt.Fprintf(w, "  %s %s\n", st.Bad.Render("✗"), chk.Title)
+		case chk.Warning:
+			fmt.Fprintf(w, "  %s %s %s\n", st.Warn.Render("!"), chk.Title, st.Dim.Render("(warning)"))
+		default:
+			fmt.Fprintf(w, "  %s %s %s\n", st.Bad.Render("✗"), chk.Title, st.Dim.Render("("+chk.Severity+")"))
 			if chk.Error != "" {
 				fmt.Fprintf(w, "      %s\n", st.Dim.Render(chk.Error))
 			}
@@ -42,6 +45,9 @@ func Report(w io.Writer, res Result, jsonOut, noColor bool) error {
 
 	fmt.Fprintln(w)
 	summary := fmt.Sprintf("%d passed, %d failed", res.Passed(), res.Failed())
+	if n := res.Warnings(); n > 0 {
+		summary += fmt.Sprintf(", %d warning(s)", n)
+	}
 	if res.OK() {
 		fmt.Fprintf(w, "%s %s\n", st.OK.Render("PASS"), summary)
 	} else {

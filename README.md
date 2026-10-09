@@ -49,8 +49,9 @@ It fails open: a skill the database hasn't analyzed yet shows as clean and never
 If you publish skills, `validate` checks your repository against the
 [Agent Skills](https://agentskills.io/specification) and [AGENTS.md](https://agents.md/)
 specifications — catching broken frontmatter, bad skill names, oversized descriptions,
-and a missing `AGENTS.md` or marketplace manifest before your users do. It finds every
-`SKILL.md` in the repository, including skills nested in plugin directories.
+links to files the skill doesn't ship, and a missing `AGENTS.md` or marketplace manifest
+before your users do. It finds every `SKILL.md` in the repository, including skills nested
+in plugin directories and skills packaged as `.skill` archives.
 
 ```bash
 npx @mondoohq/skillcheck validate .                    # current directory
@@ -61,22 +62,26 @@ npx @mondoohq/skillcheck validate ./my-skills --json   # any path, JSON output
 Validating /path/to/repo
 
 Agent Skills spec (SKILL.md)
-  ✓ The repository contains at least one skill (a SKILL.md file)
-  ✓ Every SKILL.md starts with valid YAML frontmatter with correctly typed fields
+  ✓ Every skill is readable, with valid, correctly typed YAML frontmatter
   ✓ Every skill name is a lowercase slug (a-z0-9, single hyphens)
   ✓ Every skill name is 1-64 characters
-  ✓ Every skill name equals its directory name
   ✓ Every skill description is 1-1024 characters
+  ✓ Every file a skill refers to is bundled with it
+  ✓ Every skill name equals its directory name
   ✓ Every skill compatibility note is at most 500 characters
-Repository contract (agents.md + marketplace)
+  ! Every SKILL.md body is at most 500 lines (move detail into references) (warning)
+Repository contract (skills, agents.md, marketplace)
+  ✓ The repository contains at least one skill (SKILL.md or .skill package)
   ✓ A root AGENTS.md exists (agents.md convention)
   ✓ .claude-plugin/marketplace.json exists and lists plugins
 
-PASS 9 passed, 0 failed
+PASS 10 passed, 0 failed, 1 warning(s)
 ```
 
-It exits **1** if any check fails, so it drops straight into a skills repo's CI. The rules
-are an embedded [MQL](https://mondoo.com/docs/mql/home/) policy
+Each check has a severity. It exits **1** if a check fails; a low-severity check, like the
+500-line recommendation, is a warning that is shown but doesn't fail. That drops straight
+into a skills repo's CI. The rules, and their severities, are an embedded
+[MQL](https://mondoo.com/docs/mql/home/) policy
 ([`repo-contract.mql.yaml`](https://github.com/mondoohq/skillcheck/blob/main/internal/validate/policy/repo-contract.mql.yaml)),
 and because it is a standard cnspec bundle, `cnspec scan filesystem <repo> -f
 repo-contract.mql.yaml` runs the identical checks.
