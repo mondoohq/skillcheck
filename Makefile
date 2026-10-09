@@ -9,10 +9,16 @@ LDFLAGS  = -s -w \
            -X main.commit=$(COMMIT) \
            -X main.date=$(DATE)
 
-.PHONY: build test test-npm lint clean
+.PHONY: build install test test-npm lint clean
 
 build:
 	CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(PROJECT_NAME) $(MAIN)
+
+# Install skillcheck into the Go bin directory ($GOBIN, or $GOPATH/bin)
+install:
+	CGO_ENABLED=0 go install -ldflags="$(LDFLAGS)" $(MAIN)
+	@bindir="$$(go env GOBIN)"; [ -n "$$bindir" ] || bindir="$$(go env GOPATH)/bin"; \
+		echo "Installed $(PROJECT_NAME) to $$bindir"
 
 test:
 	go test ./... -count=1
