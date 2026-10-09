@@ -3,6 +3,9 @@ module go.mondoo.com/skillcheck
 go 1.26.8
 
 require (
+	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/mattn/go-isatty v0.0.24
+	github.com/muesli/termenv v0.16.0
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/cobra v1.10.2
 	go.mondoo.com/mql v0.0.0-20261008222131-29f5d6bf1c6e
@@ -51,6 +54,10 @@ require (
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/carabiner-dev/spdx3 v0.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/charmbracelet/colorprofile v0.4.3 // indirect
+	github.com/charmbracelet/x/ansi v0.11.8 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
+	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
@@ -126,7 +133,6 @@ require (
 	github.com/masterzen/simplexml v0.0.0-20190410153822-31eea3082786 // indirect
 	github.com/masterzen/winrm v0.0.0-20261004123143-57b335310d59 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
-	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-runewidth v0.0.30 // indirect
 	github.com/microsoft/wmi v0.44.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -142,7 +148,6 @@ require (
 	github.com/moby/sys/sequential v0.7.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
-	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
@@ -189,6 +194,7 @@ require (
 	github.com/ulikunitz/xz v0.5.17 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
+	github.com/xo/terminfo v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.19.0 // indirect
 	go.mondoo.com/mondoo-go v0.0.0-20261006001321-cdf50e77324e // indirect
 	go.mondoo.com/ranger-rpc v0.8.1 // indirect
