@@ -7,18 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
+	"go.mondoo.com/skillcheck/internal/ui"
 )
 
-const (
-	colReset = "\033[0m"
-	colGreen = "\033[32m"
-	colRed   = "\033[31m"
-	colDim   = "\033[2m"
-	colBold  = "\033[1m"
-)
-
-// Report writes the result to w: pretty, grouped text (optionally colored) or,
-// when jsonOut is set, the Result as JSON.
+// Report writes the result to w: grouped text, colored when w is a terminal
+// and noColor is unset, or, when jsonOut is set, the Result as JSON.
 func Report(w io.Writer, res Result, jsonOut, noColor bool) error {
 	if jsonOut {
 		enc := json.NewEncoder(w)
@@ -26,27 +20,22 @@ func Report(w io.Writer, res Result, jsonOut, noColor bool) error {
 		return enc.Encode(res)
 	}
 
-	c := func(color, s string) string {
-		if noColor {
-			return s
-		}
-		return color + s + colReset
-	}
+	st := ui.NewStyles(w, noColor)
 
-	fmt.Fprintf(w, "%s %s\n\n", c(colBold, "Validating"), res.Repo)
+	fmt.Fprintf(w, "%s %s\n\n", st.Bold.Render("Validating"), res.Repo)
 
 	group := ""
 	for _, chk := range res.Checks {
 		if chk.Group != group {
 			group = chk.Group
-			fmt.Fprintf(w, "%s\n", c(colDim, group))
+			fmt.Fprintf(w, "%s\n", st.Dim.Render(group))
 		}
 		if chk.Pass {
-			fmt.Fprintf(w, "  %s %s\n", c(colGreen, "✓"), chk.Title)
+			fmt.Fprintf(w, "  %s %s\n", st.OK.Render("✓"), chk.Title)
 		} else {
-			fmt.Fprintf(w, "  %s %s\n", c(colRed, "✗"), chk.Title)
+			fmt.Fprintf(w, "  %s %s\n", st.Bad.Render("✗"), chk.Title)
 			if chk.Error != "" {
-				fmt.Fprintf(w, "      %s\n", c(colDim, chk.Error))
+				fmt.Fprintf(w, "      %s\n", st.Dim.Render(chk.Error))
 			}
 		}
 	}
@@ -54,9 +43,9 @@ func Report(w io.Writer, res Result, jsonOut, noColor bool) error {
 	fmt.Fprintln(w)
 	summary := fmt.Sprintf("%d passed, %d failed", res.Passed(), res.Failed())
 	if res.OK() {
-		fmt.Fprintf(w, "%s %s\n", c(colGreen, "PASS"), summary)
+		fmt.Fprintf(w, "%s %s\n", st.OK.Render("PASS"), summary)
 	} else {
-		fmt.Fprintf(w, "%s %s\n", c(colRed, "FAIL"), summary)
+		fmt.Fprintf(w, "%s %s\n", st.Bad.Render("FAIL"), summary)
 	}
 	return nil
 }

@@ -13,6 +13,7 @@ import (
 	"go.mondoo.com/skillcheck/internal/hasher"
 	"go.mondoo.com/skillcheck/internal/mondoo"
 	"go.mondoo.com/skillcheck/internal/reporter"
+	"go.mondoo.com/skillcheck/internal/ui"
 )
 
 var (
@@ -34,7 +35,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "skillcheck",
 		Short: "AI agent skill security scanner",
-		Long:  colorLogo() + "\n\nDetects locally installed AI agent skills, computes SHA-256\nchecksums, and queries the Mondoo AI Agent Security database\nfor known threats.",
+		Long:  colorLogo(false) + "\n\nDetects locally installed AI agent skills, computes SHA-256\nchecksums, and queries the Mondoo AI Agent Security database\nfor known threats.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Detect NO_COLOR environment variable
 			if _, ok := os.LookupEnv("NO_COLOR"); ok {
@@ -60,11 +61,10 @@ func main() {
 	}
 }
 
-func colorLogo() string {
-	if _, ok := os.LookupEnv("NO_COLOR"); ok {
-		return logo + "\n  mondoo™"
-	}
-	return "\033[36m" + logo + "\033[0m" + "\n  \033[2mmondoo™\033[0m"
+// colorLogo renders the logo for stdout, colored when stdout is a terminal.
+func colorLogo(noColor bool) string {
+	st := ui.NewStyles(os.Stdout, noColor)
+	return st.Accent.Render(logo) + "\n  " + st.Dim.Render("mondoo™")
 }
 
 // agentDef defines an AI agent and its MQL queries.
@@ -255,11 +255,7 @@ func buildQuery(resource, configPath, field string) string {
 
 func runScan(jsonOutput, noColor, verbose bool) error {
 	if !jsonOutput {
-		if noColor {
-			fmt.Println(logo + "\n  mondoo™")
-		} else {
-			fmt.Println(colorLogo())
-		}
+		fmt.Println(colorLogo(noColor))
 		fmt.Println()
 	}
 
@@ -277,7 +273,11 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 		return fmt.Errorf("failed to determine home directory: %w", err)
 	}
 
+	// Progress goes to stderr, and only to a terminal, so stdout stays the report.
+	spin := ui.NewSpinner(os.Stderr, !jsonOutput)
+	spin.Start("Scanning")
 	for _, ag := range agents {
+		spin.Update("Scanning " + ag.Platform)
 		configPath := filepath.Join(home, ag.ConfigDir)
 		agentResult := &reporter.AgentResult{Platform: ag.Platform, ConfigPath: configPath}
 
@@ -386,6 +386,8 @@ func runScan(jsonOutput, noColor, verbose bool) error {
 			result.Agents = append(result.Agents, *agentResult)
 		}
 	}
+
+	spin.Stop()
 
 	var rep reporter.Reporter
 	if jsonOutput {

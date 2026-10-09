@@ -7,13 +7,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"go.mondoo.com/skillcheck/internal/ui"
 )
 
-// CLIReporter writes scan results as colored terminal output.
+// CLIReporter writes scan results as terminal output, colored when Writer is a
+// terminal and NoColor is unset.
 type CLIReporter struct {
 	Writer  io.Writer
 	NoColor bool
 	Verbose bool
+
+	styles *ui.Styles
 }
 
 func (r *CLIReporter) Report(result *ScanResult) error {
@@ -116,22 +121,23 @@ func (r *CLIReporter) printAgent(agent *AgentResult) {
 }
 
 func (r *CLIReporter) colorize(text, style string) string {
-	if r.NoColor {
-		return text
+	if r.styles == nil {
+		r.styles = ui.NewStyles(r.Writer, r.NoColor)
 	}
+	st := r.styles
 	switch style {
 	case "red":
-		return "\033[31m" + text + "\033[0m"
+		return st.Bad.Render(text)
 	case "green":
-		return "\033[32m" + text + "\033[0m"
+		return st.OK.Render(text)
 	case "yellow":
-		return "\033[33m" + text + "\033[0m"
+		return st.Warn.Render(text)
 	case "cyan":
-		return "\033[36m" + text + "\033[0m"
+		return st.Accent.Render(text)
 	case "bold":
-		return "\033[1m" + text + "\033[0m"
+		return st.Bold.Render(text)
 	case "dim":
-		return "\033[2m" + text + "\033[0m"
+		return st.Dim.Render(text)
 	default:
 		return text
 	}
