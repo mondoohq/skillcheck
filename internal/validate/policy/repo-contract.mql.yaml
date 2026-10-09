@@ -42,7 +42,7 @@ policies:
         filters: asset.family.contains("os")
         checks:
           - uid: skill-frontmatter-valid
-            title: Every skill can be read, with valid YAML frontmatter and correctly typed fields
+            title: Every skill is readable, with valid, correctly typed YAML frontmatter
             impact: 80
             mql: |
               agentskills(path: props.repo).skills.all(errors.length == 0)
@@ -77,7 +77,7 @@ policies:
             mql: |
               agentskills(path: props.repo).skills.all(compatibility.length <= 500)
           - uid: skill-body-size
-            title: Every SKILL.md body is at most 500 lines (move detail into referenced files)
+            title: Every SKILL.md body is at most 500 lines (move detail into references)
             impact: 30
             mql: |
               agentskills(path: props.repo).skills.all(lines <= 500)
@@ -94,7 +94,7 @@ policies:
         filters: asset.family.contains("os")
         checks:
           - uid: skills-present
-            title: The repository contains at least one skill (a SKILL.md file or .skill package)
+            title: The repository contains at least one skill (SKILL.md or .skill package)
             impact: 70
             mql: |
               agentskills(path: props.repo).skills.length > 0

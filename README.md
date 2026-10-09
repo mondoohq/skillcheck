@@ -62,16 +62,16 @@ npx @mondoohq/skillcheck validate ./my-skills --json   # any path, JSON output
 Validating /path/to/repo
 
 Agent Skills spec (SKILL.md)
-  ✓ Every skill can be read, with valid YAML frontmatter and correctly typed fields
+  ✓ Every skill is readable, with valid, correctly typed YAML frontmatter
   ✓ Every skill name is a lowercase slug (a-z0-9, single hyphens)
   ✓ Every skill name is 1-64 characters
   ✓ Every skill description is 1-1024 characters
   ✓ Every file a skill refers to is bundled with it
   ✓ Every skill name equals its directory name
   ✓ Every skill compatibility note is at most 500 characters
-  ! Every SKILL.md body is at most 500 lines (move detail into referenced files) (warning)
+  ! Every SKILL.md body is at most 500 lines (move detail into references) (warning)
 Repository contract (skills, agents.md, marketplace)
-  ✓ The repository contains at least one skill (a SKILL.md file or .skill package)
+  ✓ The repository contains at least one skill (SKILL.md or .skill package)
   ✓ A root AGENTS.md exists (agents.md convention)
   ✓ .claude-plugin/marketplace.json exists and lists plugins
 
