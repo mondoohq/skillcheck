@@ -4,13 +4,19 @@
 package main
 
 import (
+	"archive/zip"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
 	"go.mondoo.com/skillcheck/internal/engine"
 	"go.mondoo.com/skillcheck/internal/hasher"
+	"go.mondoo.com/skillcheck/internal/mondoo"
+	"go.mondoo.com/skillcheck/internal/reporter"
 )
 
 // newEngine starts the embedded MQL engine for a test.
@@ -176,5 +182,92 @@ func TestSpecFindingsOnInstalledSkills(t *testing.T) {
 
 	if f := specs.findings(filepath.Join(configPath, "rules", "x.md")); f != nil {
 		t.Errorf("a source that is not a SKILL.md has findings: %v", f)
+	}
+}
+
+// offlineClient is a risk-database client whose lookups find nothing, so a
+// test sees the fail-open path without the network.
+func offlineClient(t *testing.T) *mondoo.Client {
+	t.Helper()
+	srv := httptest.NewServer(http.NotFoundHandler())
+	t.Cleanup(srv.Close)
+	c := mondoo.NewClient()
+	c.BaseURL = srv.URL
+	return c
+}
+
+func writeTestFile(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestScanProject(t *testing.T) {
+	eng := newEngine(t)
+	proj := t.TempDir()
+	writeTestFile(t, filepath.Join(proj, ".claude/skills/ok-skill/SKILL.md"), "---\nname: ok-skill\ndescription: d\n---\n# ok\n")
+	writeTestFile(t, filepath.Join(proj, "AGENTS.md"), "# Agents\n")
+	writeTestFile(t, filepath.Join(proj, "services/api/CLAUDE.md"), "# API\n")
+	writeTestFile(t, filepath.Join(proj, ".cursor/rules/style.mdc"), "rule\n")
+	writeTestFile(t, filepath.Join(proj, "node_modules/dep/AGENTS.md"), "# dependency\n")
+
+	// A packaged skill with a name that breaks the spec.
+	f, err := os.Create(filepath.Join(proj, "pkg.skill"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	zw := zip.NewWriter(f)
+	w, err := zw.Create("Pkg/SKILL.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write([]byte("---\nname: Pkg\ndescription: d\n---\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	pr, err := scanProject(eng, offlineClient(t), newSpecChecker(eng), proj)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	skills := map[string]reporter.SkillResult{}
+	for _, s := range pr.Skills {
+		skills[s.Name] = s
+	}
+	if len(skills) != 2 {
+		t.Fatalf("skills = %v, want ok-skill and Pkg", pr.Skills)
+	}
+	if s := skills["ok-skill"]; s.Hash == "" || s.Status != "unknown" || len(s.Spec) != 0 {
+		t.Errorf("ok-skill = %+v, want hashed, unknown, no spec findings", s)
+	}
+	if s := skills["Pkg"]; len(s.Spec) != 1 || s.Spec[0].UID != "skill-name-valid-slug" {
+		t.Errorf("Pkg spec findings = %+v, want skill-name-valid-slug", s.Spec)
+	}
+
+	var rules []string
+	for _, r := range pr.Rules {
+		if r.Hash == "" {
+			t.Errorf("instruction file %s has no hash", r.Name)
+		}
+		rules = append(rules, r.Name+"="+r.Agent)
+	}
+	sort.Strings(rules)
+	want := []string{".cursor/rules/style.mdc=cursor", "AGENTS.md=", "services/api/CLAUDE.md=claude.code"}
+	if strings.Join(rules, ",") != strings.Join(want, ",") {
+		t.Errorf("instruction files = %v, want %v", rules, want)
+	}
+
+	if _, err := scanProject(eng, offlineClient(t), newSpecChecker(eng), filepath.Join(proj, "AGENTS.md")); err == nil {
+		t.Error("a project that is not a directory: want an error")
 	}
 }

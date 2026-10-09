@@ -58,11 +58,15 @@ type MCPServerResult struct {
 	URL     string `json:"url,omitempty"`
 }
 
-// RuleResult holds a single rule's info.
+// RuleResult holds a single rule's info: an agent rule file, or a project's
+// agent instruction file such as AGENTS.md.
 type RuleResult struct {
 	Name   string `json:"name"`
 	Source string `json:"source,omitempty"`
 	Hash   string `json:"hash"`
+	// Agent names the agent that reads a project instruction file; empty for
+	// AGENTS.md, which many agents read.
+	Agent string `json:"agent,omitempty"`
 }
 
 // HasCriticalOrHigh returns true if any skill has critical or high-severity reports.
