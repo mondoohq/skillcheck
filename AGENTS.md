@@ -22,6 +22,7 @@ the OS + core providers compiled in.
 
 ```bash
 make build    # CGO_ENABLED=0 go build
+make install  # go install into $GOBIN (or $GOPATH/bin)
 make test     # go test ./... -count=1
 make lint     # golangci-lint run ./...
 ```

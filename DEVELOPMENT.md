@@ -9,6 +9,7 @@
 
 ```bash
 make build
+make install   # into $GOBIN, or $GOPATH/bin
 make test
 make lint
 ```
